@@ -73,22 +73,22 @@ export default function OrderCard({ order }: OrderCardProps) {
     }
   }
 
-  async function handleMarkDone() {
+  async function handleToggleComplete() {
     if (loading) return;
 
     setLoading(true);
     try {
       const { error } = await supabase
         .from('Orders')
-        .update({ is_completed: true })
+        .update({ is_completed: !order.is_completed })
         .eq('id', order.id);
 
       if (error) throw error;
 
       router.refresh();
     } catch (error) {
-      console.error('Error marking order as done:', error);
-      alert('Failed to mark order as done');
+      console.error('Error toggling completion status:', error);
+      alert('Failed to update completion status');
     } finally {
       setLoading(false);
     }
@@ -201,26 +201,22 @@ export default function OrderCard({ order }: OrderCardProps) {
         )}
 
         <div className="mt-4 pt-4 border-t border-gray-200 flex flex-wrap gap-3 justify-end">
-          {order.is_completed ? (
-            <button
-              disabled
-              className="text-sm text-gray-500 font-medium px-4 py-2 rounded-lg bg-gray-200 cursor-not-allowed"
-            >
-              Completed
-            </button>
-          ) : (
-            <button
-              onClick={handleMarkDone}
-              disabled={loading}
-              className="text-sm text-white font-medium px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
-            >
-              {loading ? 'Updating...' : 'Mark Done'}
-            </button>
-          )}
+          <button
+            onClick={handleToggleComplete}
+            disabled={loading}
+            className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
+              order.is_completed
+                ? 'text-gray-600 bg-gray-200 hover:bg-gray-300'
+                : 'text-white bg-blue-500 hover:bg-blue-600'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {loading ? 'Updating...' : order.is_completed ? 'Mark Incomplete' : 'Mark Done'}
+          </button>
           <button
             onClick={handleEdit}
-            disabled={loading}
-            className="text-sm text-gray-600 font-medium px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 transition-colors"
+            disabled={loading || order.is_completed}
+            className="text-sm text-gray-600 font-medium px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title={order.is_completed ? 'Cannot edit completed orders' : 'Edit order'}
           >
             Edit
           </button>
