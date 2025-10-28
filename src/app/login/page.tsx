@@ -15,8 +15,8 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    // Simple authentication - can be replaced with real auth later
-    if (username.trim() && password.trim()) {
+    // Hardcoded credentials: admin / 123456
+    if (username === 'admin' && password === '123456') {
       // Store login state in localStorage
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('username', username);
@@ -24,7 +24,7 @@ export default function LoginPage() {
       // Redirect to orders page
       router.push('/orders');
     } else {
-      setError('Please enter both username and password');
+      setError('Invalid username or password');
       setLoading(false);
     }
   }
