@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
+import Image from 'next/image';
 
 type AppLayoutProps = {
   children: React.ReactNode;
@@ -24,8 +25,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
           >
             <Menu size={24} />
           </button>
-          <div className="h-8 w-8 rounded-full bg-[#FADBD8] flex items-center justify-center">
-            <span className="text-xs text-gray-500">Logo</span>
+          <div className="h-8 w-8 rounded-full overflow-hidden">
+            <Image
+              src="/logo.jpg"
+              alt="Sisters Mom Logo"
+              width={32}
+              height={32}
+              className="object-cover"
+            />
           </div>
         </header>
 

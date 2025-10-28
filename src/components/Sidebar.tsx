@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingBag, TrendingUp, Package, LogOut, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 type SidebarProps = {
   isOpen: boolean;
@@ -53,8 +54,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-[#FADBD8] flex items-center justify-center">
-                  <span className="text-xs text-gray-500">Logo</span>
+                <div className="h-12 w-12 rounded-full overflow-hidden">
+                  <Image
+                    src="/logo.jpg"
+                    alt="Sisters Mom Logo"
+                    width={48}
+                    height={48}
+                    className="object-cover"
+                  />
                 </div>
                 <div>
                   <h2 className="font-bold text-gray-800 text-sm">Sisters & Mom</h2>

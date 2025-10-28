@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,9 +34,15 @@ export default function LoginPage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#FFF8F5]">
       <div className="w-full max-w-sm p-8 space-y-8 bg-white rounded-2xl shadow-lg text-center">
 
-        {/* Logo Placeholder */}
-        <div className="mx-auto h-24 w-24 rounded-full bg-[#FADBD8] flex items-center justify-center">
-          <span className="text-sm text-gray-500">Logo</span>
+        {/* Logo */}
+        <div className="mx-auto h-24 w-24 rounded-full overflow-hidden">
+          <Image
+            src="/logo.jpg"
+            alt="Sisters Mom Logo"
+            width={96}
+            height={96}
+            className="object-cover"
+          />
         </div>
 
         <div>
