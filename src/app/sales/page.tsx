@@ -1,3 +1,10 @@
+import { supabase } from '@/lib/supabase';
+import AppLayout from '@/components/AppLayout';
+
+// Force dynamic rendering to fetch fresh data on every request
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // A re-usable component for the metric cards on the sales dashboard
 const MetricCard = ({ title, value, colorClass }: { title: string; value: string; colorClass: string; }) => (
     <div className="bg-white p-5 rounded-2xl shadow-md">
@@ -19,27 +26,96 @@ const FilterButton = ({ children, isActive = false }: { children: React.ReactNod
     </button>
 );
 
-export default function SalesDashboardPage() {
-    return (
-        <div className="min-h-screen bg-[#FFF8F5]">
-            {/* Header */}
-            <header className="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-10">
-                <button className="text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 12h16" />
-                    </svg>
-                </button>
-                <div className="h-10 w-10 bg-[#FADBD8] rounded-md flex items-center justify-center text-xs">Logo</div>
-            </header>
+async function getSalesMetrics() {
+    const { data: orders, error } = await supabase
+        .from('Orders')
+        .select('total_amount, is_paid, order_date');
 
-            <main className="p-4 md:p-6">
+    if (error) {
+        console.error('Error fetching orders:', error);
+        return {
+            todaysSales: 0,
+            paidToday: 0,
+            pendingPayment: 0,
+            overallTotal: 0,
+            overallPaid: 0
+        };
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+
+    let todaysSales = 0;
+    let paidToday = 0;
+    let pendingPayment = 0;
+    let overallTotal = 0;
+    let overallPaid = 0;
+
+    orders?.forEach(order => {
+        const orderDate = new Date(order.order_date).toISOString().split('T')[0];
+        const amount = Number(order.total_amount);
+
+        // Overall metrics
+        overallTotal += amount;
+        if (order.is_paid) {
+            overallPaid += amount;
+        }
+
+        // Today's metrics
+        if (orderDate === today) {
+            todaysSales += amount;
+            if (order.is_paid) {
+                paidToday += amount;
+            } else {
+                pendingPayment += amount;
+            }
+        }
+    });
+
+    return {
+        todaysSales,
+        paidToday,
+        pendingPayment,
+        overallTotal,
+        overallPaid
+    };
+}
+
+export default async function SalesDashboardPage() {
+    const metrics = await getSalesMetrics();
+
+    return (
+        <AppLayout>
+            <div className="min-h-full">
+                <main className="p-4 md:p-6">
+                <h1 className="text-3xl font-bold text-gray-800 mb-6">Sales Dashboard</h1>
+
                 {/* Metric Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <MetricCard title="Today's Sales" value="₱450.00" colorClass="text-[#F5B7B1]" />
-                    <MetricCard title="Paid Today" value="₱320.00" colorClass="text-[#A9DFBF]" />
-                    <MetricCard title="Pending Payment" value="₱130.00" colorClass="text-orange-400" />
-                    <MetricCard title="Overall Total Sales" value="₱1,250.00" colorClass="text-gray-800" />
-                    <MetricCard title="Overall Paid Sales" value="₱980.00" colorClass="text-gray-800" />
+                    <MetricCard
+                        title="Today's Sales"
+                        value={`₱${metrics.todaysSales.toFixed(2)}`}
+                        colorClass="text-[#F5B7B1]"
+                    />
+                    <MetricCard
+                        title="Paid Today"
+                        value={`₱${metrics.paidToday.toFixed(2)}`}
+                        colorClass="text-[#A9DFBF]"
+                    />
+                    <MetricCard
+                        title="Pending Payment"
+                        value={`₱${metrics.pendingPayment.toFixed(2)}`}
+                        colorClass="text-orange-400"
+                    />
+                    <MetricCard
+                        title="Overall Total Sales"
+                        value={`₱${metrics.overallTotal.toFixed(2)}`}
+                        colorClass="text-gray-800"
+                    />
+                    <MetricCard
+                        title="Overall Paid Sales"
+                        value={`₱${metrics.overallPaid.toFixed(2)}`}
+                        colorClass="text-gray-800"
+                    />
                 </div>
 
                 {/* Filters */}
@@ -76,7 +152,8 @@ export default function SalesDashboardPage() {
                         <p>Chart data will be displayed here</p>
                     </div>
                 </div>
-            </main>
-        </div>
+                </main>
+            </div>
+        </AppLayout>
     );
 }

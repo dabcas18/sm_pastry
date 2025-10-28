@@ -3,7 +3,7 @@
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import AppLayout from '@/components/AppLayout';
 import Toast from '@/components/Toast';
@@ -17,6 +17,7 @@ type Product = {
 };
 
 type OrderItem = {
+  id?: string;
   product_id: string;
   product_name: string;
   quantity: number;
@@ -24,21 +25,76 @@ type OrderItem = {
   subtotal: number;
 };
 
-export default function OrderFormPage() {
+export default function EditOrderPage() {
   const router = useRouter();
+  const params = useParams();
+  const orderId = params.id as string;
+
   const [products, setProducts] = useState<Product[]>([]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [quantity, setQuantity] = useState<number | ''>(1);
   const [customerName, setCustomerName] = useState('');
-  const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
+  const [orderDate, setOrderDate] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
+    fetchOrderData();
     fetchProducts();
-  }, []);
+  }, [orderId]);
+
+  async function fetchOrderData() {
+    try {
+      // Fetch order
+      const { data: order, error: orderError } = await supabase
+        .from('Orders')
+        .select('*')
+        .eq('id', orderId)
+        .single();
+
+      if (orderError) throw orderError;
+
+      setCustomerName(order.customer_name);
+      setOrderDate(new Date(order.order_date).toISOString().split('T')[0]);
+
+      // Fetch order items with product details
+      const { data: items, error: itemsError } = await supabase
+        .from('OrderItems')
+        .select(`
+          id,
+          product_id,
+          quantity,
+          unit_price,
+          subtotal,
+          Products (
+            name
+          )
+        `)
+        .eq('order_id', orderId);
+
+      if (itemsError) throw itemsError;
+
+      const formattedItems = items.map((item: any) => ({
+        id: item.id,
+        product_id: item.product_id,
+        product_name: item.Products?.name || 'Unknown',
+        quantity: item.quantity,
+        unit_price: Number(item.unit_price),
+        subtotal: Number(item.subtotal)
+      }));
+
+      setOrderItems(formattedItems);
+    } catch (error) {
+      console.error('Error fetching order:', error);
+      alert('Failed to load order');
+      router.push('/orders');
+    } finally {
+      setFetching(false);
+    }
+  }
 
   async function fetchProducts() {
     const { data, error } = await supabase
@@ -139,24 +195,29 @@ export default function OrderFormPage() {
     setLoading(true);
 
     try {
-      // Create order
-      const { data: order, error: orderError } = await supabase
+      // Update order
+      const { error: orderError } = await supabase
         .from('Orders')
-        .insert({
+        .update({
           customer_name: customerName,
           order_date: orderDate,
-          total_amount: calculateTotal(),
-          is_paid: false,
-          is_completed: false
+          total_amount: calculateTotal()
         })
-        .select()
-        .single();
+        .eq('id', orderId);
 
       if (orderError) throw orderError;
 
-      // Create order items
+      // Delete all existing order items
+      const { error: deleteError } = await supabase
+        .from('OrderItems')
+        .delete()
+        .eq('order_id', orderId);
+
+      if (deleteError) throw deleteError;
+
+      // Insert new order items
       const orderItemsData = orderItems.map(item => ({
-        order_id: order.id,
+        order_id: orderId,
         product_id: item.product_id,
         quantity: item.quantity,
         unit_price: item.unit_price,
@@ -173,11 +234,21 @@ export default function OrderFormPage() {
       router.push('/orders');
       router.refresh();
     } catch (error) {
-      console.error('Error creating order:', error);
-      alert('Failed to create order. Please try again.');
+      console.error('Error updating order:', error);
+      alert('Failed to update order. Please try again.');
     } finally {
       setLoading(false);
     }
+  }
+
+  if (fetching) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-full">
+          <p className="text-gray-500">Loading order...</p>
+        </div>
+      </AppLayout>
+    );
   }
 
   return (
@@ -189,7 +260,7 @@ export default function OrderFormPage() {
             <Link href="/orders" className="text-gray-600 p-2 rounded-full hover:bg-gray-100">
               <ChevronLeft size={24} />
             </Link>
-            <h1 className="text-3xl font-bold text-gray-800">Create Order</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Edit Order</h1>
           </div>
         </div>
 
@@ -329,7 +400,7 @@ export default function OrderFormPage() {
                 disabled={loading || orderItems.length === 0}
                 className="px-6 py-3 font-semibold text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {loading ? 'Saving...' : 'Save Order'}
+                {loading ? 'Updating...' : 'Update Order'}
               </button>
             </div>
           </form>
