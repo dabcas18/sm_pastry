@@ -8,7 +8,15 @@
       "Bash(taskkill:*)",
       "Bash(npm run build:*)",
       "Bash(rm:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git config:*)",
+      "Bash(gh auth:*)",
+      "Bash(git credential-manager:*)",
+      "Bash(cmdkey /list:*)",
+      "Bash(findstr:*)",
+      "Bash(git remote set-url:*)"
     ],
     "deny": [],
     "ask": []
