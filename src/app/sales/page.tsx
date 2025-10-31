@@ -1,159 +1,333 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import AppLayout from '@/components/AppLayout';
+import { Calendar, TrendingUp, DollarSign, AlertCircle } from 'lucide-react';
 
-// Force dynamic rendering to fetch fresh data on every request
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+type BakerProduct = {
+  product_name: string;
+  quantity: number;
+  unit_type: string;
+  pieces_per_pack: number | null;
+  revenue: number;
+};
 
-// A re-usable component for the metric cards on the sales dashboard
-const MetricCard = ({ title, value, colorClass }: { title: string; value: string; colorClass: string; }) => (
-    <div className="bg-white p-5 rounded-2xl shadow-md">
-        <p className="text-gray-600 text-sm font-medium">{title}</p>
-        <p className={`text-3xl font-bold ${colorClass}`}>{value}</p>
-    </div>
-);
+type BakerSales = {
+  baker_name: string;
+  total_revenue: number;
+  products: BakerProduct[];
+};
 
-// A re-usable component for the filter buttons
-const FilterButton = ({ children, isActive = false }: { children: React.ReactNode, isActive?: boolean }) => (
-    <button
-        className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors flex-grow text-center ${
-            isActive
-                ? 'bg-[#C8E6C9] text-green-900' // A slightly different green to match mockup
-                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-        }`}
-    >
-        {children}
-    </button>
-);
+type UnpaidOrder = {
+  order_id: string;
+  customer_name: string;
+  total_amount: number;
+};
 
-async function getSalesMetrics() {
-    const { data: orders, error } = await supabase
-        .from('Orders')
-        .select('total_amount, is_paid, order_date');
+export default function SalesDashboardPage() {
+  const [selectedDate, setSelectedDate] = useState('');
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [overallSales, setOverallSales] = useState(0);
+  const [selectedDateSales, setSelectedDateSales] = useState(0);
+  const [bakerSales, setBakerSales] = useState<BakerSales[]>([]);
+  const [unpaidOrders, setUnpaidOrders] = useState<UnpaidOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingPayment, setUpdatingPayment] = useState<string | null>(null);
 
-    if (error) {
-        console.error('Error fetching orders:', error);
-        return {
-            todaysSales: 0,
-            paidToday: 0,
-            pendingPayment: 0,
-            overallTotal: 0,
-            overallPaid: 0
-        };
+  useEffect(() => {
+    fetchAvailableDates();
+    fetchOverallSales();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchSelectedDateSales(selectedDate);
     }
+  }, [selectedDate]);
 
-    const today = new Date().toISOString().split('T')[0];
+  async function fetchAvailableDates() {
+    try {
+      const { data: orders, error } = await supabase
+        .from('Orders')
+        .select('order_date');
 
-    let todaysSales = 0;
-    let paidToday = 0;
-    let pendingPayment = 0;
-    let overallTotal = 0;
-    let overallPaid = 0;
+      if (error) throw error;
 
-    orders?.forEach(order => {
-        const orderDate = new Date(order.order_date).toISOString().split('T')[0];
-        const amount = Number(order.total_amount);
+      const dates = Array.from(new Set(orders?.map(o => new Date(o.order_date).toISOString().split('T')[0]) || [])).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+      setAvailableDates(dates);
 
-        // Overall metrics
-        overallTotal += amount;
-        if (order.is_paid) {
-            overallPaid += amount;
-        }
+      if (dates.length > 0) {
+        setSelectedDate(dates[dates.length - 1]); // Default to most recent date
+      }
+    } catch (error) {
+      console.error('Error fetching dates:', error);
+    }
+  }
 
-        // Today's metrics
-        if (orderDate === today) {
-            todaysSales += amount;
-            if (order.is_paid) {
-                paidToday += amount;
-            } else {
-                pendingPayment += amount;
-            }
-        }
-    });
+  async function fetchOverallSales() {
+    try {
+      const { data: orders, error } = await supabase
+        .from('Orders')
+        .select('total_amount');
 
-    return {
-        todaysSales,
-        paidToday,
-        pendingPayment,
-        overallTotal,
-        overallPaid
-    };
-}
+      if (error) throw error;
 
-export default async function SalesDashboardPage() {
-    const metrics = await getSalesMetrics();
+      const total = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+      setOverallSales(total);
+    } catch (error) {
+      console.error('Error fetching overall sales:', error);
+    }
+  }
 
-    return (
-        <AppLayout>
-            <div className="min-h-full">
-                <main className="p-4 md:p-6">
-                <h1 className="text-3xl font-bold text-gray-800 mb-6">Sales Dashboard</h1>
+  async function fetchSelectedDateSales(date: string) {
+    setLoading(true);
+    try {
+      // Fetch orders for selected date
+      const { data: orders, error: ordersError } = await supabase
+        .from('Orders')
+        .select('id, total_amount, customer_name, is_paid')
+        .gte('order_date', `${date}T00:00:00`)
+        .lt('order_date', `${date}T23:59:59`);
 
-                {/* Metric Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <MetricCard
-                        title="Today's Sales"
-                        value={`₱${metrics.todaysSales.toFixed(2)}`}
-                        colorClass="text-[#F5B7B1]"
-                    />
-                    <MetricCard
-                        title="Paid Today"
-                        value={`₱${metrics.paidToday.toFixed(2)}`}
-                        colorClass="text-[#A9DFBF]"
-                    />
-                    <MetricCard
-                        title="Pending Payment"
-                        value={`₱${metrics.pendingPayment.toFixed(2)}`}
-                        colorClass="text-orange-400"
-                    />
-                    <MetricCard
-                        title="Overall Total Sales"
-                        value={`₱${metrics.overallTotal.toFixed(2)}`}
-                        colorClass="text-gray-800"
-                    />
-                    <MetricCard
-                        title="Overall Paid Sales"
-                        value={`₱${metrics.overallPaid.toFixed(2)}`}
-                        colorClass="text-gray-800"
-                    />
-                </div>
+      if (ordersError) throw ordersError;
 
-                {/* Filters */}
-                <div className="space-y-4 mb-6">
-                    <div className="flex gap-2">
-                        <FilterButton isActive>Today</FilterButton>
-                        <FilterButton>This Week</FilterButton>
-                        <FilterButton>This Month</FilterButton>
-                        <FilterButton>All Time</FilterButton>
-                    </div>
-                    <select className="w-full p-3 border-2 border-gray-200 rounded-lg bg-white text-gray-700">
-                        <option>All Payment Status</option>
-                        <option>Paid Only</option>
-                        <option>Unpaid Only</option>
-                    </select>
-                    <select className="w-full p-3 border-2 border-gray-200 rounded-lg bg-white text-gray-700">
-                        <option>All Completion Status</option>
-                        <option>Active Only</option>
-                        <option>Completed Only</option>
-                    </select>
-                </div>
+      const dateSales = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+      setSelectedDateSales(dateSales);
 
-                {/* Sales Trend Chart */}
-                <div className="bg-white p-5 rounded-2xl shadow-md">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-bold text-gray-800">Sales Trend</h2>
-                        <span className="text-sm font-semibold text-gray-600">This Week</span>
-                    </div>
-                    <div className="h-48 flex flex-col items-center justify-center text-center text-gray-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4" />
-                        </svg>
-                        <p>Chart data will be displayed here</p>
-                    </div>
-                </div>
-                </main>
+      // Filter unpaid orders
+      const unpaid = orders?.filter(o => !o.is_paid).map(o => ({
+        order_id: o.id,
+        customer_name: o.customer_name,
+        total_amount: Number(o.total_amount)
+      })) || [];
+      setUnpaidOrders(unpaid);
+
+      // Fetch order items with product details for this date
+      const orderIds = orders?.map(o => o.id) || [];
+      if (orderIds.length > 0) {
+        const { data: orderItems, error: itemsError } = await supabase
+          .from('OrderItems')
+          .select(`
+            quantity,
+            subtotal,
+            Products (
+              name,
+              baker,
+              unit_type,
+              pieces_per_pack
+            )
+          `)
+          .in('order_id', orderIds);
+
+        if (itemsError) throw itemsError;
+
+        // Group by baker
+        const bakerMap = new Map<string, BakerSales>();
+
+        orderItems?.forEach((item: any) => {
+          const bakerName = item.Products?.baker || 'Unassigned';
+          const productName = item.Products?.name || 'Unknown';
+          const revenue = Number(item.subtotal);
+          const quantity = item.quantity;
+
+          let bakerData = bakerMap.get(bakerName);
+          if (!bakerData) {
+            bakerData = {
+              baker_name: bakerName,
+              total_revenue: 0,
+              products: []
+            };
+            bakerMap.set(bakerName, bakerData);
+          }
+
+          bakerData.total_revenue += revenue;
+
+          // Check if product already exists
+          const existingProduct = bakerData.products.find(p => p.product_name === productName);
+          if (existingProduct) {
+            existingProduct.quantity += quantity;
+            existingProduct.revenue += revenue;
+          } else {
+            bakerData.products.push({
+              product_name: productName,
+              quantity: quantity,
+              unit_type: item.Products?.unit_type || 'piece',
+              pieces_per_pack: item.Products?.pieces_per_pack,
+              revenue: revenue
+            });
+          }
+        });
+
+        // Convert to array and sort bakers by name
+        const bakers = Array.from(bakerMap.values()).sort((a, b) => {
+          const order = ['Anna', 'Nicole', 'Mommy'];
+          return order.indexOf(a.baker_name) - order.indexOf(b.baker_name);
+        });
+
+        setBakerSales(bakers);
+      } else {
+        setBakerSales([]);
+      }
+    } catch (error) {
+      console.error('Error fetching selected date sales:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleMarkAsPaid(orderId: string) {
+    setUpdatingPayment(orderId);
+    try {
+      const { error } = await supabase
+        .from('Orders')
+        .update({ is_paid: true })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      // Refresh the selected date data
+      if (selectedDate) {
+        await fetchSelectedDateSales(selectedDate);
+        await fetchOverallSales();
+      }
+    } catch (error) {
+      console.error('Error marking order as paid:', error);
+      alert('Failed to mark order as paid');
+    } finally {
+      setUpdatingPayment(null);
+    }
+  }
+
+  function formatDate(dateString: string) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function formatQuantity(quantity: number, unitType: string, piecesPerPack: number | null): string {
+    if (unitType === 'pack' && piecesPerPack) {
+      return `${quantity} pack${quantity > 1 ? 's' : ''}`;
+    }
+    return `${quantity} pc${quantity > 1 ? 's' : ''}`;
+  }
+
+  return (
+    <AppLayout title="Sales Dashboard">
+      <div className="min-h-full">
+        <main className="p-6">
+          <h1 className="text-3xl font-bold text-gray-800 mb-6 hidden lg:block">Sales Dashboard</h1>
+
+          {/* Date Selector */}
+          <div className="mb-4 bg-white p-3 rounded-lg shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar size={18} className="text-gray-500" />
+              <p className="text-xs font-medium text-gray-600">Select Order Date:</p>
             </div>
-        </AppLayout>
-    );
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-1.5 min-w-max">
+                {availableDates.map(date => (
+                  <button
+                    key={date}
+                    onClick={() => setSelectedDate(date)}
+                    className={`px-3 py-1.5 rounded-md font-medium text-xs transition-colors whitespace-nowrap ${
+                      selectedDate === date
+                        ? 'bg-[#A9DFBF] text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {formatDate(date)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-1.5 mb-1">
+                <TrendingUp className="text-blue-600" size={18} />
+                <p className="text-xs text-blue-600 font-semibold">Overall Sales (All Dates)</p>
+              </div>
+              <p className="text-2xl font-bold text-blue-700">₱{overallSales.toFixed(2)}</p>
+            </div>
+            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+              <div className="flex items-center gap-1.5 mb-1">
+                <DollarSign className="text-green-600" size={18} />
+                <p className="text-xs text-green-600 font-semibold">Selected Date Sales</p>
+              </div>
+              <p className="text-2xl font-bold text-green-700">₱{selectedDateSales.toFixed(2)}</p>
+            </div>
+          </div>
+
+          {/* Baker Sales Breakdown */}
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-sm">Loading sales data...</p>
+            </div>
+          ) : bakerSales.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-sm">No sales for selected date</p>
+            </div>
+          ) : (
+            <>
+              {/* Baker Sales Cards */}
+              <div className="space-y-2 mb-4">
+                {bakerSales.map(baker => (
+                  <div key={baker.baker_name} className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#A9DFBF]">
+                    <div className="flex justify-between items-center mb-2">
+                      <h2 className="text-base font-bold text-gray-800">{baker.baker_name}</h2>
+                      <p className="text-base font-bold text-[#A9DFBF]">₱{baker.total_revenue.toFixed(2)}</p>
+                    </div>
+                    <div className="space-y-1">
+                      {baker.products.map((product, idx) => (
+                        <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded-md">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-800 text-sm">{product.product_name}</p>
+                            <p className="text-xs text-gray-500">
+                              {formatQuantity(product.quantity, product.unit_type, product.pieces_per_pack)}
+                            </p>
+                          </div>
+                          <p className="font-bold text-gray-700 text-sm">₱{product.revenue.toFixed(2)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Unpaid Orders Section */}
+              {unpaidOrders.length > 0 && (
+                <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg shadow-sm">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <AlertCircle className="text-orange-600" size={18} />
+                    <h2 className="text-sm font-bold text-orange-800">Unpaid Orders for Selected Date</h2>
+                  </div>
+                  <div className="space-y-1">
+                    {unpaidOrders.map(order => (
+                      <div key={order.order_id} className="flex justify-between items-center p-2 bg-white rounded-md">
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-800 text-sm">{order.customer_name}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-orange-600 text-sm">₱{order.total_amount.toFixed(2)}</p>
+                          <button
+                            onClick={() => handleMarkAsPaid(order.order_id)}
+                            disabled={updatingPayment === order.order_id}
+                            className="px-3 py-1.5 bg-[#82C3A3] text-white rounded-md font-medium text-xs hover:bg-[#6BAF8B] transition-colors disabled:bg-green-300 disabled:cursor-not-allowed"
+                          >
+                            {updatingPayment === order.order_id ? 'Updating...' : 'Mark as Paid'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </main>
+      </div>
+    </AppLayout>
+  );
 }

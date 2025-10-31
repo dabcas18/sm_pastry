@@ -14,6 +14,7 @@ export type Product = {
   unit_type: string;
   pieces_per_pack: number | null;
   is_active: boolean;
+  baker: string;
   created_at: string;
   updated_at: string;
 };
@@ -25,6 +26,7 @@ export type Order = {
   total_amount: number;
   is_paid: boolean;
   is_completed: boolean;
+  is_production_complete: boolean;
   created_at: string;
   updated_at: string;
 };

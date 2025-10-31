@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -13,6 +12,7 @@ type Order = {
   total_amount: number;
   is_paid: boolean;
   is_completed: boolean;
+  is_production_complete: boolean;
   formattedDate: string;
 };
 
@@ -25,10 +25,10 @@ type OrderItem = {
 
 type OrderCardProps = {
   order: Order;
+  onUpdate?: () => void;
 };
 
-export default function OrderCard({ order }: OrderCardProps) {
-  const router = useRouter();
+export default function OrderCard({ order, onUpdate }: OrderCardProps) {
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -85,7 +85,7 @@ export default function OrderCard({ order }: OrderCardProps) {
 
       if (error) throw error;
 
-      router.refresh();
+      if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error toggling completion status:', error);
       alert('Failed to update completion status');
@@ -106,7 +106,7 @@ export default function OrderCard({ order }: OrderCardProps) {
 
       if (error) throw error;
 
-      router.refresh();
+      if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error toggling paid status:', error);
       alert('Failed to update paid status');
@@ -125,7 +125,7 @@ export default function OrderCard({ order }: OrderCardProps) {
 
       if (error) throw error;
 
-      router.refresh();
+      if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error deleting order:', error);
       alert('Failed to delete order');
@@ -135,42 +135,49 @@ export default function OrderCard({ order }: OrderCardProps) {
     }
   }
 
-  function handleEdit() {
-    router.push(`/orders/edit/${order.id}`);
-  }
-
   return (
     <>
-      <div className={`p-5 rounded-2xl shadow-md ${order.is_completed ? 'bg-gray-100' : 'bg-white'}`}>
+      <div className={`p-3 rounded-lg shadow-sm border ${order.is_completed ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-200'}`}>
         <div className="flex flex-wrap justify-between items-start">
-          <div className="mb-4 md:mb-0 flex-1">
-            <div className="flex items-center gap-2">
-              <p className={`font-bold text-xl ${order.is_completed ? 'text-gray-500' : 'text-gray-800'}`}>
+          <div className="mb-2 md:mb-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <p className={`font-semibold text-base ${order.is_completed ? 'text-gray-500' : 'text-gray-800'}`}>
                 {order.customer_name}
               </p>
               <button
                 onClick={() => setExpanded(!expanded)}
                 className="text-gray-500 hover:text-gray-700 transition-colors"
               >
-                {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </button>
             </div>
-            <p className="text-sm text-gray-500">{order.formattedDate}</p>
+            <p className="text-xs text-gray-500">{order.formattedDate}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleTogglePaid}
-              disabled={loading || order.is_completed}
-              className={`px-3 py-1 text-sm font-semibold rounded-full transition-all ${
-                order.is_paid
-                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                  : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-              } ${(loading || order.is_completed) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              title={order.is_completed ? 'Cannot change paid status for completed orders' : 'Click to toggle paid status'}
-            >
-              {order.is_paid ? 'Paid' : 'Unpaid'}
-            </button>
-            <p className={`font-bold text-lg ${order.is_completed ? 'text-gray-500' : 'text-gray-800'}`}>
+          <div className="flex items-center gap-2">
+            {/* Toggle Switch for Payment Status */}
+            <div className="flex items-center gap-1.5">
+              <span className={`text-[10px] font-medium ${order.is_paid ? 'text-gray-400' : 'text-[#E8A87C]'}`}>
+                Unpaid
+              </span>
+              <button
+                onClick={handleTogglePaid}
+                disabled={loading}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  order.is_paid ? 'bg-[#82C3A3]' : 'bg-[#E8A87C]'
+                } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                title="Click to toggle paid status"
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                    order.is_paid ? 'translate-x-5' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+              <span className={`text-[10px] font-medium ${order.is_paid ? 'text-[#82C3A3]' : 'text-gray-400'}`}>
+                Paid
+              </span>
+            </div>
+            <p className={`font-semibold text-base ${order.is_completed ? 'text-gray-500' : 'text-gray-800'}`}>
               ₱{Number(order.total_amount).toFixed(2)}
             </p>
           </div>
@@ -178,21 +185,21 @@ export default function OrderCard({ order }: OrderCardProps) {
 
         {/* Expanded Order Items */}
         {expanded && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-2 pt-2 border-t border-gray-200">
             {loadingItems ? (
-              <p className="text-gray-500 text-center py-2">Loading items...</p>
+              <p className="text-gray-500 text-center py-1.5 text-xs">Loading items...</p>
             ) : orderItems.length === 0 ? (
-              <p className="text-gray-500 text-center py-2">No items found</p>
+              <p className="text-gray-500 text-center py-1.5 text-xs">No items found</p>
             ) : (
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-gray-600 mb-2">Order Items:</p>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-gray-600 mb-1">Order Items:</p>
                 {orderItems.map((item, index) => (
                   <div key={index} className="flex justify-between items-center py-1">
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">{item.product_name}</p>
-                      <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                      <p className="text-xs font-medium text-gray-800">{item.product_name}</p>
+                      <p className="text-[10px] text-gray-500">Qty: {item.quantity}</p>
                     </div>
-                    <p className="text-sm font-semibold text-gray-700">₱{item.subtotal.toFixed(2)}</p>
+                    <p className="text-xs font-semibold text-gray-700">₱{item.subtotal.toFixed(2)}</p>
                   </div>
                 ))}
               </div>
@@ -200,22 +207,25 @@ export default function OrderCard({ order }: OrderCardProps) {
           </div>
         )}
 
-        <div className="mt-4 pt-4 border-t border-gray-200 flex flex-wrap gap-3 justify-end">
+        <div className="mt-2 pt-2 border-t border-gray-200 flex flex-wrap gap-2 justify-end">
           <button
             onClick={handleToggleComplete}
             disabled={loading}
-            className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
+            className={`text-xs font-medium px-3 py-1.5 rounded-md transition-colors ${
               order.is_completed
                 ? 'text-gray-600 bg-gray-200 hover:bg-gray-300'
-                : 'text-white bg-blue-500 hover:bg-blue-600'
+                : 'text-white bg-[#82C3A3] hover:bg-[#6BAF8B]'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            {loading ? 'Updating...' : order.is_completed ? 'Mark Incomplete' : 'Mark Done'}
+            {loading ? 'Updating...' : order.is_completed ? 'Mark as Not Received' : 'Mark as Received'}
           </button>
           <button
-            onClick={handleEdit}
+            onClick={() => {
+              // Navigate to edit page - we'll need to use window.location since we can't use useRouter here
+              window.location.href = `/orders/edit/${order.id}`;
+            }}
             disabled={loading || order.is_completed}
-            className="text-sm text-gray-600 font-medium px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="text-xs text-gray-700 font-medium px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title={order.is_completed ? 'Cannot edit completed orders' : 'Edit order'}
           >
             Edit
@@ -223,7 +233,7 @@ export default function OrderCard({ order }: OrderCardProps) {
           <button
             onClick={() => setShowDeleteModal(true)}
             disabled={loading}
-            className="text-sm text-white font-medium px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 disabled:bg-red-300 transition-colors"
+            className="text-xs text-white font-medium px-3 py-1.5 rounded-md bg-[#E57373] hover:bg-[#D75A5A] disabled:bg-[#F5A5A5] transition-colors"
           >
             {loading ? 'Deleting...' : 'Delete'}
           </button>

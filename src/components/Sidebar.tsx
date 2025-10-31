@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingBag, TrendingUp, Package, LogOut, X } from 'lucide-react';
+import { ShoppingBag, TrendingUp, Package, LogOut, User, Menu as MenuIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
@@ -15,6 +15,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [username, setUsername] = useState('');
+  const [showLogout, setShowLogout] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
@@ -31,6 +33,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: '/orders', label: 'Orders', icon: ShoppingBag },
     { href: '/sales', label: 'Sales', icon: TrendingUp },
     { href: '/production', label: 'Production', icon: Package },
+    { href: '/menu', label: 'Menu', icon: MenuIcon },
   ];
 
   return (
@@ -45,55 +48,55 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-white shadow-lg z-50 transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full bg-white shadow-lg z-50 transition-all duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static w-64`}
+        } lg:translate-x-0 lg:static ${isCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64`}
       >
         <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="p-6 border-b border-gray-200">
+          {/* Header with Logo */}
+          <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full overflow-hidden">
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className={`flex items-center gap-3 hover:opacity-80 transition-opacity ${isCollapsed ? 'justify-center w-full' : ''}`}
+              >
+                <div className={`rounded-full overflow-hidden flex-shrink-0 ${isCollapsed ? 'h-10 w-10' : 'h-16 w-16'}`}>
                   <Image
                     src="/logo.jpg"
                     alt="Sisters Mom Logo"
-                    width={48}
-                    height={48}
+                    width={isCollapsed ? 40 : 64}
+                    height={isCollapsed ? 40 : 64}
                     className="object-cover"
                   />
                 </div>
-                <div>
-                  <h2 className="font-bold text-gray-800 text-sm">Sisters & Mom</h2>
-                  <p className="text-xs text-gray-500">Pastry Shop</p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="lg:hidden text-gray-600 hover:text-gray-800"
-              >
-                <X size={24} />
+                {!isCollapsed && (
+                  <div className="flex-1">
+                    <h2 className="font-bold text-gray-800 text-sm">Sisters & Mom</h2>
+                    <p className="text-xs text-gray-500">Pastry Shop</p>
+                  </div>
+                )}
               </button>
-            </div>
-          </div>
-
-          {/* User Info */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-[#A9DFBF] flex items-center justify-center">
-                <span className="text-sm font-semibold text-white">
-                  {username.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">{username}</p>
-                <p className="text-xs text-gray-500">Administrator</p>
-              </div>
+              {!isCollapsed && (
+                <button
+                  onClick={() => setIsCollapsed(true)}
+                  className="hidden lg:block text-gray-400 hover:text-gray-600"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+              )}
+              {isCollapsed && (
+                <button
+                  onClick={() => setIsCollapsed(false)}
+                  className="hidden lg:block absolute right-2 text-gray-400 hover:text-gray-600"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              )}
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
@@ -103,28 +106,52 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm ${
                     isActive
                       ? 'bg-[#A9DFBF] text-white'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  } ${isCollapsed ? 'justify-center' : ''}`}
+                  title={isCollapsed ? item.label : ''}
                 >
-                  <Icon size={20} />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon size={20} className="flex-shrink-0" />
+                  {!isCollapsed && <span className="font-medium">{item.label}</span>}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Logout */}
-          <div className="p-4 border-t border-gray-200">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 w-full text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <LogOut size={20} />
-              <span className="font-medium">Logout</span>
-            </button>
+          {/* Account Section at Bottom */}
+          <div className="p-3 border-t border-gray-200">
+            <div className="relative">
+              <button
+                onClick={() => setShowLogout(!showLogout)}
+                className={`flex items-center gap-3 px-3 py-2.5 w-full text-gray-700 hover:bg-gray-100 rounded-md transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+                title={isCollapsed ? username : ''}
+              >
+                <div className="h-8 w-8 rounded-full bg-[#A9DFBF] flex items-center justify-center flex-shrink-0">
+                  <User size={16} className="text-white" />
+                </div>
+                {!isCollapsed && (
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold text-gray-800">{username}</p>
+                    <p className="text-xs text-gray-500">Administrator</p>
+                  </div>
+                )}
+              </button>
+
+              {/* Logout Dropdown */}
+              {showLogout && (
+                <div className={`absolute bottom-full mb-2 bg-white border border-gray-200 rounded-lg shadow-lg ${isCollapsed ? 'left-full ml-2' : 'left-0 right-0'}`}>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-4 py-2.5 w-full text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm"
+                  >
+                    <LogOut size={18} />
+                    <span className="font-medium">Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </aside>

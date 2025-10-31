@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -243,35 +243,30 @@ export default function EditOrderPage() {
 
   if (fetching) {
     return (
-      <AppLayout>
+      <AppLayout title="Edit Order">
         <div className="flex items-center justify-center min-h-full">
-          <p className="text-gray-500">Loading order...</p>
+          <p className="text-gray-500 text-sm">Loading order...</p>
         </div>
       </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
+    <AppLayout title="Edit Order">
       <div className="min-h-full">
         {/* Sticky Header */}
         <div className="sticky top-0 z-20 bg-[#FFF8F5] pt-6 pb-4 px-6">
-          <div className="flex items-center gap-4">
-            <Link href="/orders" className="text-gray-600 p-2 rounded-full hover:bg-gray-100">
-              <ChevronLeft size={24} />
-            </Link>
-            <h1 className="text-3xl font-bold text-gray-800">Edit Order</h1>
-          </div>
+          <h1 className="text-3xl font-bold text-gray-800 hidden lg:block">Edit Order</h1>
         </div>
 
         <main className="px-6 pb-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-3">
             {/* Customer Info */}
-            <div className="bg-white p-5 rounded-2xl shadow-md">
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Customer Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-700 mb-2">Customer Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="customer_name" className="block text-sm font-medium text-gray-600 mb-1">
+                  <label htmlFor="customer_name" className="block text-xs font-medium text-gray-600 mb-1">
                     Customer Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -279,18 +274,18 @@ export default function EditOrderPage() {
                     id="customer_name"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FADBD8]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#A9DFBF] focus:border-[#A9DFBF] text-sm"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="order_date" className="block text-sm font-medium text-gray-600 mb-1">Order Date</label>
+                  <label htmlFor="order_date" className="block text-xs font-medium text-gray-600 mb-1">Order Date</label>
                   <input
                     type="date"
                     id="order_date"
                     value={orderDate}
                     onChange={(e) => setOrderDate(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FADBD8]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#A9DFBF] focus:border-[#A9DFBF] text-sm"
                     required
                   />
                 </div>
@@ -298,12 +293,12 @@ export default function EditOrderPage() {
             </div>
 
             {/* Add Order Item */}
-            <div className="bg-white p-5 rounded-2xl shadow-md">
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Add Item</h2>
-              <div className="flex flex-col gap-4">
+            <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-700 mb-2">Add Item</h2>
+              <div className="flex flex-col gap-3">
                 {/* Category Dropdown */}
                 <div className="w-full">
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-600 mb-1">Category</label>
+                  <label htmlFor="category" className="block text-xs font-medium text-gray-600 mb-1">Category</label>
                   <CustomSelect
                     options={categories.map(cat => ({
                       value: cat,
@@ -316,9 +311,9 @@ export default function EditOrderPage() {
                 </div>
 
                 {/* Product and Quantity Row */}
-                <div className="flex flex-col md:flex-row items-end gap-4">
+                <div className="flex flex-col md:flex-row items-end gap-2">
                   <div className="flex-grow w-full">
-                    <label htmlFor="product" className="block text-sm font-medium text-gray-600 mb-1">Product</label>
+                    <label htmlFor="product" className="block text-xs font-medium text-gray-600 mb-1">Product</label>
                     <CustomSelect
                       options={filteredProducts.map(p => ({
                         value: p.id,
@@ -330,7 +325,7 @@ export default function EditOrderPage() {
                     />
                   </div>
                   <div className="w-full md:w-auto">
-                    <label htmlFor="quantity" className="block text-sm font-medium text-gray-600 mb-1">Quantity</label>
+                    <label htmlFor="quantity" className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
                     <input
                       type="number"
                       id="quantity"
@@ -338,67 +333,67 @@ export default function EditOrderPage() {
                       value={quantity}
                       onChange={handleQuantityChange}
                       onFocus={(e) => e.target.select()}
-                      className="w-full md:w-24 px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FADBD8]"
+                      className="w-full md:w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#A9DFBF] focus:border-[#A9DFBF] text-sm"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleAddItem}
-                    className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-[#A9DFBF] text-white font-semibold rounded-lg hover:bg-[#82C3A3] transition-colors"
+                    className="w-full md:w-auto flex items-center justify-center gap-1.5 px-3 py-2 bg-[#82C3A3] text-white font-medium rounded-md hover:bg-[#6BAF8B] transition-colors text-sm"
                   >
-                    <Plus size={18} /> Add Item
+                    <Plus size={16} /> Add Item
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Order Items List */}
-            <div className="bg-white p-5 rounded-2xl shadow-md">
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Order Summary</h2>
+            <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-700 mb-2">Order Summary</h2>
               {orderItems.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No items added yet</p>
+                <p className="text-gray-500 text-center py-3 text-xs">No items added yet</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-1">
                   {orderItems.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded-md">
                       <div>
-                        <p className="font-semibold text-gray-800">{item.product_name}</p>
-                        <p className="text-sm text-gray-600">Quantity: {item.quantity} × ₱{item.unit_price.toFixed(2)}</p>
+                        <p className="font-medium text-gray-800 text-sm">{item.product_name}</p>
+                        <p className="text-xs text-gray-600">Qty: {item.quantity} × ₱{item.unit_price.toFixed(2)}</p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <p className="font-semibold text-gray-800">₱{item.subtotal.toFixed(2)}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-gray-800 text-sm">₱{item.subtotal.toFixed(2)}</p>
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(index)}
                           className="text-red-500 hover:text-red-700"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-              <div className="mt-4 pt-4 border-t-2 border-dashed">
+              <div className="mt-2 pt-2 border-t border-dashed border-gray-300">
                 <div className="flex justify-between items-center">
-                  <p className="text-xl font-bold text-gray-800">Order Total</p>
-                  <p className="text-xl font-bold text-gray-800">₱{calculateTotal().toFixed(2)}</p>
+                  <p className="text-base font-bold text-gray-800">Order Total</p>
+                  <p className="text-base font-bold text-gray-800">₱{calculateTotal().toFixed(2)}</p>
                 </div>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-4">
+            <div className="flex justify-center gap-2">
               <Link
                 href="/orders"
-                className="px-6 py-3 font-semibold text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 font-medium text-gray-700 border border-gray-300 bg-white rounded-md hover:bg-gray-50 transition-colors text-sm"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={loading || orderItems.length === 0}
-                className="px-6 py-3 font-semibold text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-4 py-2 font-medium text-white bg-[#82C3A3] rounded-md hover:bg-[#6BAF8B] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
               >
                 {loading ? 'Updating...' : 'Update Order'}
               </button>
