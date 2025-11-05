@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import AppLayout from '@/components/AppLayout';
-import { DollarSign } from 'lucide-react';
 
 type Product = {
   id: string;
@@ -93,8 +92,7 @@ export default function MenuPage() {
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <DollarSign size={14} className="text-[#A9DFBF]" />
+                        <div className="flex items-center gap-1">
                           <p className="font-bold text-[#A9DFBF] text-base">
                             {formatPrice(product.price)}
                           </p>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import AppLayout from '@/components/AppLayout';
-import { Calendar, TrendingUp, DollarSign, AlertCircle } from 'lucide-react';
+import { Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 
 type BakerProduct = {
   product_name: string;
@@ -253,7 +253,7 @@ export default function SalesDashboardPage() {
             </div>
             <div className="bg-green-50 p-3 rounded-lg border border-green-200">
               <div className="flex items-center gap-1.5 mb-1">
-                <DollarSign className="text-green-600" size={18} />
+                <span className="text-green-600 font-bold text-lg">₱</span>
                 <p className="text-xs text-green-600 font-semibold">Selected Date Sales</p>
               </div>
               <p className="text-2xl font-bold text-green-700">₱{selectedDateSales.toFixed(2)}</p>
