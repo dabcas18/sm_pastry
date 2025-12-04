@@ -20,7 +20,7 @@ INSERT INTO "Products" (id, name, category, price, unit_type, pieces_per_pack, i
 
 -- SANDWICH (per piece)
 INSERT INTO "Products" (id, name, category, price, unit_type, pieces_per_pack, is_active) VALUES
-(gen_random_uuid(), 'Ham, Cheese. & Egg', 'Sandwich', 270, 'piece', null, true),
+(gen_random_uuid(), 'Ham, Cheese, & Egg', 'Sandwich', 270, 'piece', null, true),
 (gen_random_uuid(), 'Tuna, Crabstick, & Mango', 'Sandwich', 270, 'piece', null, true),
 (gen_random_uuid(), 'Pepperoni and Cheese', 'Sandwich', 270, 'piece', null, true),
 (gen_random_uuid(), 'Chicken Salad', 'Sandwich', 270, 'piece', null, true);
@@ -57,4 +57,5 @@ INSERT INTO "Products" (id, name, category, price, unit_type, pieces_per_pack, i
 (gen_random_uuid(), 'Red Velvet Cupcakes (4pcs)', 'Others', 250, 'pack', 4, true),
 (gen_random_uuid(), 'Brownies (6pcs)', 'Others', 300, 'pack', 6, true),
 (gen_random_uuid(), 'Brownies (9pcs)', 'Others', 425, 'pack', 9, true),
-(gen_random_uuid(), 'Graham Balls (15pcs)', 'Others', 150, 'pack', 15, true);
+(gen_random_uuid(), 'Graham Balls (Plain, 15pcs)', 'Others', 150, 'pack', 15, true),
+(gen_random_uuid(), 'Graham Balls (Mallows, 15pcs)', 'Others', 250, 'pack', 15, true);

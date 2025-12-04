@@ -16,16 +16,27 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    // Hardcoded credentials: admin / 123456
-    if (username === 'admin' && password === '123456') {
-      // Store login state in localStorage
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('username', username);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-      // Redirect to orders page
-      router.push('/orders');
-    } else {
-      setError('Invalid username or password');
+      const data = await response.json();
+
+      if (data.success) {
+        // Redirect to orders page
+        router.push('/orders');
+        router.refresh();
+      } else {
+        setError(data.message || 'Invalid username or password');
+        setLoading(false);
+      }
+    } catch (error) {
+      setError('An error occurred. Please try again.');
       setLoading(false);
     }
   }
