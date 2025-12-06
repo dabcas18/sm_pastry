@@ -61,11 +61,12 @@ export default function LandingPage() {
             >
               View Menu
             </Link>
-            <button
-              className="w-full sm:w-auto px-8 py-4 bg-[#82C3A3] text-white font-semibold rounded-lg hover:bg-[#6BAF8B] transition-colors text-lg"
+            <Link
+              href="/order"
+              className="w-full sm:w-auto px-8 py-4 bg-[#82C3A3] text-white font-semibold rounded-lg hover:bg-[#6BAF8B] transition-colors text-lg text-center"
             >
               Order Now
-            </button>
+            </Link>
           </div>
 
           {/* Instagram Section */}
