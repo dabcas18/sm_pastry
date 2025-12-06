@@ -30,7 +30,9 @@
       "Bash(cmd /c copy \"c:\\Users\\Dennis\\Downloads\\Price List.png\" \"C:\\Users\\Dennis\\Desktop\\Projects\\sm\\sm_pastry\\public\\menu.png\")",
       "Bash(cmd /c dir \"C:\\Users\\Dennis\\Desktop\\Projects\\sm\\sm_pastry\\public\\menu.png\")",
       "Bash(cmd /c dir \"C:\\Users\\Dennis\\Desktop\\Projects\\sm\\sm_pastry\\public\\*.png\")",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "WebFetch(domain:sistersandmom.site)",
+      "WebFetch(domain:www.sistersandmom.site)"
     ],
     "deny": [],
     "ask": []

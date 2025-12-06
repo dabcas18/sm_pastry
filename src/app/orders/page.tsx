@@ -9,12 +9,17 @@ import OrderCard from '@/components/OrderCard';
 
 type Order = {
   id: string;
+  order_number: string;
   customer_name: string;
+  phone_number: string;
+  email: string;
   order_date: string;
+  pickup_date: string;
   total_amount: number;
   is_paid: boolean;
   is_completed: boolean;
   is_production_complete: boolean;
+  status: string;
   created_at: string;
 };
 
@@ -88,10 +93,12 @@ export default function OrdersPage() {
       });
     }
 
-    // Filter by search query
+    // Filter by search query (name or order number)
     if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(order =>
-        order.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
+        order.customer_name.toLowerCase().includes(query) ||
+        (order.order_number && order.order_number.toLowerCase().includes(query))
       );
     }
 
@@ -170,7 +177,7 @@ export default function OrdersPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by customer name..."
+                placeholder="Search by name or order number..."
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#A9DFBF] focus:border-[#A9DFBF] text-sm"
               />
             </div>

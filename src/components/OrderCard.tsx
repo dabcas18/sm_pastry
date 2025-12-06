@@ -7,12 +7,17 @@ import ConfirmModal from './ConfirmModal';
 
 type Order = {
   id: string;
+  order_number: string;
   customer_name: string;
+  phone_number: string;
+  email: string;
   order_date: string;
+  pickup_date: string;
   total_amount: number;
   is_paid: boolean;
   is_completed: boolean;
   is_production_complete: boolean;
+  status: string;
   formattedDate: string;
 };
 
@@ -28,12 +33,22 @@ type OrderCardProps = {
   onUpdate?: () => void;
 };
 
+const STATUS_CONFIG = {
+  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', nextStatus: 'confirmed', nextLabel: 'Confirm Payment' },
+  confirmed: { label: 'Confirmed', color: 'bg-blue-100 text-blue-800', nextStatus: 'ready', nextLabel: 'Mark Ready' },
+  ready: { label: 'Ready', color: 'bg-purple-100 text-purple-800', nextStatus: 'completed', nextLabel: 'Complete Order' },
+  completed: { label: 'Completed', color: 'bg-green-100 text-green-800', nextStatus: null, nextLabel: null },
+};
+
 export default function OrderCard({ order, onUpdate }: OrderCardProps) {
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const currentStatus = order.status || 'pending';
+  const statusConfig = STATUS_CONFIG[currentStatus as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.pending;
 
   useEffect(() => {
     if (expanded && orderItems.length === 0) {
@@ -135,9 +150,67 @@ export default function OrderCard({ order, onUpdate }: OrderCardProps) {
     }
   }
 
+  async function handleStatusChange(newStatus: string) {
+    if (loading) return;
+
+    setLoading(true);
+    try {
+      const updates: Record<string, any> = { status: newStatus };
+
+      // Auto-update related flags
+      if (newStatus === 'confirmed') {
+        updates.is_paid = true;
+      } else if (newStatus === 'completed') {
+        updates.is_completed = true;
+        updates.is_production_complete = true;
+      }
+
+      const { error } = await supabase
+        .from('Orders')
+        .update(updates)
+        .eq('id', order.id);
+
+      if (error) throw error;
+
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Failed to update status');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const formatPickupDate = (dateStr: string) => {
+    if (!dateStr) return 'Not set';
+    return new Date(dateStr).toLocaleDateString('en-PH', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
     <>
       <div className={`p-3 rounded-lg shadow-sm border ${order.is_completed ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-200'}`}>
+        {/* Header with Order Number and Status */}
+        <div className="flex flex-wrap justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            {order.order_number && (
+              <span className="text-xs font-mono font-bold text-[#82C3A3] bg-[#82C3A3]/10 px-2 py-0.5 rounded">
+                {order.order_number}
+              </span>
+            )}
+            <span className={`text-xs font-medium px-2 py-0.5 rounded ${statusConfig.color}`}>
+              {statusConfig.label}
+            </span>
+          </div>
+          <p className={`font-semibold text-base ${order.is_completed ? 'text-gray-500' : 'text-gray-800'}`}>
+            ₱{Number(order.total_amount).toFixed(2)}
+          </p>
+        </div>
+
+        {/* Customer Info */}
         <div className="flex flex-wrap justify-between items-start">
           <div className="mb-2 md:mb-0 flex-1">
             <div className="flex items-center gap-1.5">
@@ -151,7 +224,12 @@ export default function OrderCard({ order, onUpdate }: OrderCardProps) {
                 {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </button>
             </div>
-            <p className="text-xs text-gray-500">{order.formattedDate}</p>
+            <p className="text-xs text-gray-500">
+              {order.formattedDate} {order.pickup_date && `• Pickup: ${formatPickupDate(order.pickup_date)}`}
+            </p>
+            {order.phone_number && (
+              <p className="text-xs text-gray-400">{order.phone_number}</p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {/* Toggle Switch for Payment Status */}
@@ -177,9 +255,6 @@ export default function OrderCard({ order, onUpdate }: OrderCardProps) {
                 Paid
               </span>
             </div>
-            <p className={`font-semibold text-base ${order.is_completed ? 'text-gray-500' : 'text-gray-800'}`}>
-              ₱{Number(order.total_amount).toFixed(2)}
-            </p>
           </div>
         </div>
 
@@ -207,36 +282,40 @@ export default function OrderCard({ order, onUpdate }: OrderCardProps) {
           </div>
         )}
 
-        <div className="mt-2 pt-2 border-t border-gray-200 flex flex-wrap gap-2 justify-end">
-          <button
-            onClick={handleToggleComplete}
-            disabled={loading}
-            className={`text-xs font-medium px-3 py-1.5 rounded-md transition-colors ${
-              order.is_completed
-                ? 'text-gray-600 bg-gray-200 hover:bg-gray-300'
-                : 'text-white bg-[#82C3A3] hover:bg-[#6BAF8B]'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            {loading ? 'Updating...' : order.is_completed ? 'Mark as Not Received' : 'Mark as Received'}
-          </button>
-          <button
-            onClick={() => {
-              // Navigate to edit page - we'll need to use window.location since we can't use useRouter here
-              window.location.href = `/orders/edit/${order.id}`;
-            }}
-            disabled={loading || order.is_completed}
-            className="text-xs text-gray-700 font-medium px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            title={order.is_completed ? 'Cannot edit completed orders' : 'Edit order'}
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            disabled={loading}
-            className="text-xs text-white font-medium px-3 py-1.5 rounded-md bg-[#E57373] hover:bg-[#D75A5A] disabled:bg-[#F5A5A5] transition-colors"
-          >
-            {loading ? 'Deleting...' : 'Delete'}
-          </button>
+        <div className="mt-2 pt-2 border-t border-gray-200 flex flex-wrap gap-2 justify-between items-center">
+          {/* Status Action Button */}
+          <div>
+            {statusConfig.nextStatus && (
+              <button
+                onClick={() => handleStatusChange(statusConfig.nextStatus!)}
+                disabled={loading}
+                className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors text-white bg-[#82C3A3] hover:bg-[#6BAF8B] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Updating...' : statusConfig.nextLabel}
+              </button>
+            )}
+          </div>
+
+          {/* Other Actions */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                window.location.href = `/orders/edit/${order.id}`;
+              }}
+              disabled={loading || order.is_completed}
+              className="text-xs text-gray-700 font-medium px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title={order.is_completed ? 'Cannot edit completed orders' : 'Edit order'}
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              disabled={loading}
+              className="text-xs text-white font-medium px-3 py-1.5 rounded-md bg-[#E57373] hover:bg-[#D75A5A] disabled:bg-[#F5A5A5] transition-colors"
+            >
+              {loading ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
         </div>
       </div>
 

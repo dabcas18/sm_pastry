@@ -54,7 +54,7 @@ export default function LandingPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4">
             <Link
               href="/menu"
               className="w-full sm:w-auto px-8 py-4 bg-white border-2 border-[#82C3A3] text-[#82C3A3] font-semibold rounded-lg hover:bg-[#82C3A3] hover:text-white transition-colors text-center text-lg"
@@ -66,6 +66,14 @@ export default function LandingPage() {
               className="w-full sm:w-auto px-8 py-4 bg-[#82C3A3] text-white font-semibold rounded-lg hover:bg-[#6BAF8B] transition-colors text-lg text-center"
             >
               Order Now
+            </Link>
+          </div>
+          <div className="text-center mb-16">
+            <Link
+              href="/track"
+              className="text-gray-500 hover:text-[#82C3A3] transition-colors text-sm"
+            >
+              Already ordered? Track your order →
             </Link>
           </div>
 
