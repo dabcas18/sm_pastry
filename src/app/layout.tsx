@@ -7,8 +7,11 @@ const inter = Inter({ subsets: ["latin"] });
 const satisfy = Satisfy({ weight: "400", subsets: ["latin"], variable: "--font-script" });
 
 export const metadata: Metadata = {
-  title: "Sisters' Mom Pastry",
-  description: "Order Management System for Sisters' Mom Pastry",
+  title: "Sisters & Mom Pastry Shop | Fresh Baked Goods in Mabalacat, Pampanga",
+  description: "Freshly baked cookies, brownies, cakes, loaves, and more. Homemade quality pastries made with love by Sisters & Mom in Dau, Mabalacat, Pampanga. Order online!",
+  verification: {
+    google: "MQ9gmajrIS9eoEX7gfFU0ffEBhlJWm3T8Fv1x3olNFg",
+  },
 };
 
 export default function RootLayout({
