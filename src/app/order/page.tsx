@@ -34,11 +34,17 @@ export default function CustomerOrderPage() {
   const [pickupDate, setPickupDate] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
 
-  // Get minimum pickup date (2 days from now)
+  // Get minimum pickup date (2 days from now, or 3 days if after 8 PM)
   const getMinPickupDate = () => {
-    const date = new Date();
-    date.setDate(date.getDate() + 2);
-    return date.toISOString().split('T')[0];
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // If after 8 PM (20:00), add 3 days instead of 2
+    const daysToAdd = currentHour >= 20 ? 3 : 2;
+
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + daysToAdd);
+    return minDate.toISOString().split('T')[0];
   };
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -49,6 +49,37 @@ function TrackOrderContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Auto-refresh order status every 30 seconds when order is found
+  useEffect(() => {
+    if (!order || order.is_completed) return;
+
+    const interval = setInterval(() => {
+      refreshOrderStatus();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [order]);
+
+  async function refreshOrderStatus() {
+    if (!order) return;
+
+    try {
+      const { data: orderData } = await supabase
+        .from('Orders')
+        .select('*')
+        .eq('id', order.id)
+        .single();
+
+      if (orderData) {
+        setOrder(orderData);
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      console.error('Error refreshing order:', err);
+    }
+  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,6 +228,14 @@ function TrackOrderContent() {
         {/* Order Details */}
         {order && (
           <>
+            {/* Auto-refresh indicator */}
+            {!order.is_completed && (
+              <div className="text-center text-xs text-gray-400 mb-2">
+                Auto-refreshing every 30 seconds
+                {lastUpdated && ` • Last updated: ${lastUpdated.toLocaleTimeString()}`}
+              </div>
+            )}
+
             {/* Status Timeline */}
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
               <h2 className="font-semibold text-gray-800 mb-4">Order Status</h2>
