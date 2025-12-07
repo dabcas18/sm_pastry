@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sistersandmom.site/sitemap.xml
