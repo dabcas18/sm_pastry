@@ -129,12 +129,10 @@ export async function POST(request: Request) {
       day: 'numeric'
     });
 
-    // QR code selection based on payment method
-    const qrCodeUrl = paymentMethod === 'gcash'
-      ? `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/gcash-qr.jpg`
-      : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/maribank-qr.jpg`;
-
     const paymentMethodName = paymentMethod === 'gcash' ? 'GCash' : 'MariBank';
+
+    // Site URL for email links
+    const siteUrl = 'https://sistersandmom.site';
 
     // Send confirmation email
     try {
@@ -151,7 +149,8 @@ export async function POST(request: Request) {
           </head>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #82C3A3; margin-bottom: 5px;">Sisters & Mom Pastry</h1>
+              <img src="${siteUrl}/logo.jpg" alt="Sisters & Mom" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px;">
+              <h1 style="color: #82C3A3; margin-bottom: 5px;">Sisters & Mom</h1>
               <p style="color: #666; margin: 0;">Order Confirmation</p>
             </div>
 
@@ -178,10 +177,10 @@ export async function POST(request: Request) {
               <p style="color: #6B4423;">Please pay <strong>₱${totalAmount.toLocaleString()}</strong> using <strong>${paymentMethodName}</strong>:</p>
 
               <div style="background-color: white; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
-                <img src="https://sistersandmom.site/${paymentMethod}-qr.jpg" alt="${paymentMethodName} QR Code" style="max-width: 200px; border-radius: 8px; display: block; margin: 0 auto;">
+                <img src="${siteUrl}/${paymentMethod}-qr.jpg" alt="${paymentMethodName} QR Code" style="max-width: 200px; border-radius: 8px; display: block; margin: 0 auto;">
               </div>
 
-              <p style="color: #6B4423; font-size: 14px; text-align: center;">If QR doesn't load: <a href="https://sistersandmom.site/order/confirmation?orderNumber=${order.order_number}" style="color: #82C3A3; font-weight: bold;">View payment details on our website</a></p>
+              <p style="color: #6B4423; font-size: 14px; text-align: center;">If QR doesn't load: <a href="${siteUrl}/order/confirmation?orderNumber=${order.order_number}" style="color: #82C3A3; font-weight: bold;">View payment details on our website</a></p>
             </div>
 
             <div style="background-color: #E8F5EC; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #A9DFBF;">
@@ -207,10 +206,13 @@ export async function POST(request: Request) {
             </div>
 
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
-              <p style="color: #666; font-size: 14px;">Track your order anytime at:</p>
-              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/track" style="color: #82C3A3; font-weight: bold;">Track Order</a>
+              <p style="color: #666; font-size: 14px;">Track your order anytime:</p>
+              <a href="${siteUrl}/track?orderNumber=${order.order_number}&phone=${phone}" style="display: inline-block; background-color: #82C3A3; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;">Track Order</a>
               <p style="color: #999; font-size: 12px; margin-top: 20px;">
                 Questions? DM us on Instagram <a href="https://www.instagram.com/bysistersandmom/" style="color: #82C3A3;">@bysistersandmom</a>
+              </p>
+              <p style="color: #ccc; font-size: 10px; margin-top: 15px;">
+                Website by <strong>DABCAS Digital Solutions</strong> • <a href="mailto:imdenisalimpolos@gmail.com" style="color: #82C3A3;">imdenisalimpolos@gmail.com</a>
               </p>
             </div>
           </body>

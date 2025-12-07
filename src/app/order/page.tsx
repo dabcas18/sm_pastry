@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Plus, Minus, ShoppingCart, Trash2, ArrowLeft } from 'lucide-react';
+import Header from '@/components/Header';
 import { supabase } from '@/lib/supabase';
 
 type Product = {
@@ -177,32 +177,18 @@ export default function CustomerOrderPage() {
 
   return (
     <div className="min-h-screen bg-[#FFF8F5]">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/logo.jpg"
-              alt="Sisters & Mom"
-              width={40}
-              height={40}
-              className="rounded-full"
-            />
-            <span className="font-bold text-gray-800">Sisters & Mom</span>
-          </Link>
-
-          {step === 'products' && cart.length > 0 && (
-            <button
-              onClick={() => setStep('details')}
-              className="flex items-center gap-2 px-4 py-2 bg-[#82C3A3] text-white rounded-lg hover:bg-[#6BAF8B] transition-colors"
-            >
-              <ShoppingCart size={18} />
-              <span className="font-medium">{getCartCount()}</span>
-              <span className="hidden sm:inline">- ₱{getCartTotal().toLocaleString()}</span>
-            </button>
-          )}
-        </div>
-      </header>
+      <Header rightContent={
+        step === 'products' && cart.length > 0 ? (
+          <button
+            onClick={() => setStep('details')}
+            className="flex items-center gap-2 px-4 py-2 bg-[#82C3A3] text-white rounded-lg hover:bg-[#6BAF8B] transition-colors"
+          >
+            <ShoppingCart size={18} />
+            <span className="font-medium">{getCartCount()}</span>
+            <span className="hidden sm:inline">- ₱{getCartTotal().toLocaleString()}</span>
+          </button>
+        ) : undefined
+      } />
 
       <main className="container mx-auto px-4 py-6 max-w-4xl">
         {step === 'products' ? (

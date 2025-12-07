@@ -1,27 +1,11 @@
 import Image from 'next/image';
-import Link from 'next/link';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export default function MenuPage() {
   return (
     <div className="min-h-screen bg-[#FFF8F5]">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/logo.jpg"
-              alt="Sisters & Mom Pastry Shop"
-              width={48}
-              height={48}
-              className="rounded-full"
-            />
-            <div>
-              <h2 className="font-bold text-gray-800 text-lg">Sisters & Mom</h2>
-              <p className="text-xs text-gray-500">Pastry Shop</p>
-            </div>
-          </Link>
-        </div>
-      </header>
+      <Header />
 
       {/* Menu Content */}
       <main className="container mx-auto px-6 py-8">
@@ -61,12 +45,7 @@ export default function MenuPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-16">
-        <div className="container mx-auto px-6 py-8 text-center text-gray-600 text-sm">
-          <p>&copy; 2025 Sisters & Mom Pastry Shop. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

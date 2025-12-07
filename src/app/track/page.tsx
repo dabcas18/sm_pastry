@@ -2,9 +2,9 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Package, Clock, CheckCircle, Truck, ArrowLeft } from 'lucide-react';
+import Header from '@/components/Header';
 import { supabase } from '@/lib/supabase';
 
 type Order = {
@@ -41,9 +41,10 @@ const STATUS_STEPS = [
 function TrackOrderContent() {
   const searchParams = useSearchParams();
   const initialOrderNumber = searchParams.get('orderNumber') || '';
+  const initialPhone = searchParams.get('phone') || '';
 
   const [orderNumber, setOrderNumber] = useState(initialOrderNumber);
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(initialPhone);
   const [order, setOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,6 +52,59 @@ function TrackOrderContent() {
   const [searched, setSearched] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [showSearchForm, setShowSearchForm] = useState(true);
+  const [autoFetched, setAutoFetched] = useState(false);
+
+  // Auto-fetch order if both orderNumber and phone are in URL (from email link)
+  useEffect(() => {
+    if (initialOrderNumber && initialPhone && !autoFetched) {
+      setAutoFetched(true);
+      fetchOrder(initialOrderNumber, initialPhone);
+    }
+  }, [initialOrderNumber, initialPhone, autoFetched]);
+
+  // Fetch order function (extracted for reuse)
+  async function fetchOrder(orderNum: string, phoneNum: string) {
+    setError('');
+    setSearched(true);
+    setLoading(true);
+
+    try {
+      const { data: orderData, error: orderError } = await supabase
+        .from('Orders')
+        .select('*')
+        .eq('order_number', orderNum.trim().toUpperCase())
+        .eq('phone_number', phoneNum.trim())
+        .single();
+
+      if (orderError || !orderData) {
+        setError('Order not found. Please check your order number and phone number.');
+        setOrder(null);
+        setOrderItems([]);
+        return;
+      }
+
+      setOrder(orderData);
+      setShowSearchForm(false);
+
+      const { data: itemsData } = await supabase
+        .from('OrderItems')
+        .select(`
+          id,
+          quantity,
+          unit_price,
+          subtotal,
+          product:Products(name)
+        `)
+        .eq('order_id', orderData.id);
+
+      setOrderItems(itemsData as unknown as OrderItem[] || []);
+    } catch (err) {
+      console.error('Error fetching order:', err);
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // Supabase Realtime subscription for order updates
   useEffect(() => {
@@ -80,54 +134,13 @@ function TrackOrderContent() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSearched(true);
 
     if (!orderNumber.trim() || !phone.trim()) {
       setError('Please enter both order number and phone number');
       return;
     }
 
-    setLoading(true);
-
-    try {
-      // Fetch order by order number and phone
-      const { data: orderData, error: orderError } = await supabase
-        .from('Orders')
-        .select('*')
-        .eq('order_number', orderNumber.trim().toUpperCase())
-        .eq('phone_number', phone.trim())
-        .single();
-
-      if (orderError || !orderData) {
-        setError('Order not found. Please check your order number and phone number.');
-        setOrder(null);
-        setOrderItems([]);
-        return;
-      }
-
-      setOrder(orderData);
-      setShowSearchForm(false); // Collapse form after finding order
-
-      // Fetch order items
-      const { data: itemsData } = await supabase
-        .from('OrderItems')
-        .select(`
-          id,
-          quantity,
-          unit_price,
-          subtotal,
-          product:Products(name)
-        `)
-        .eq('order_id', orderData.id);
-
-      setOrderItems(itemsData as unknown as OrderItem[] || []);
-    } catch (err) {
-      console.error('Error fetching order:', err);
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    fetchOrder(orderNumber, phone);
   };
 
   // Phone number input handler - only allow numbers
@@ -165,21 +178,7 @@ function TrackOrderContent() {
 
   return (
     <div className="min-h-screen bg-[#FFF8F5]">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/logo.jpg"
-              alt="Sisters & Mom"
-              width={40}
-              height={40}
-              className="rounded-full"
-            />
-            <span className="font-bold text-gray-800">Sisters & Mom</span>
-          </Link>
-        </div>
-      </header>
+      <Header />
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <Link href="/" className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-800 mb-4">

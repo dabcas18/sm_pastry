@@ -1,29 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#FFF8F5]">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-6 py-4 flex justify-center items-center">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.jpg"
-              alt="Sisters & Mom Pastry Shop"
-              width={48}
-              height={48}
-              className="rounded-full"
-            />
-            <div>
-              <h2 className="font-bold text-gray-800 text-lg leading-tight">
-                Sisters & Mom<br/>
-                <span className="text-xs text-gray-500 font-normal">Pastry Shop</span>
-              </h2>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <main className="container mx-auto px-6 py-16">
@@ -43,7 +26,7 @@ export default function LandingPage() {
               Sisters & Mom Pastry Shop
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl">
-              Freshly baked goods made with love. From cookies and cinnamon rolls to sandwiches and muffins, we bring homemade quality to every order.
+              Freshly baked goods made with love. From cookies and brownies to cakes and loaves, we bring homemade quality to every order.
             </p>
           </div>
 
@@ -127,7 +110,7 @@ export default function LandingPage() {
               <div className="text-4xl mb-3">🎂</div>
               <h3 className="font-bold text-gray-800 mb-2">Wide Selection</h3>
               <p className="text-sm text-gray-600">
-                Cookies, cinnamon rolls, muffins, sandwiches, loaves, and more!
+                Cookies, brownies, cakes, loaves, mallows, sandwiches, and more!
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
@@ -141,12 +124,7 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-16">
-        <div className="container mx-auto px-6 py-8 text-center text-gray-600 text-sm">
-          <p>&copy; 2025 Sisters & Mom Pastry Shop. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

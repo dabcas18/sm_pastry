@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle, Copy, Check, ExternalLink, Instagram } from 'lucide-react';
+import Header from '@/components/Header';
 import { supabase } from '@/lib/supabase';
 
 type Order = {
@@ -124,21 +125,7 @@ function OrderConfirmationContent() {
 
   return (
     <div className="min-h-screen bg-[#FFF8F5]">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-center">
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/logo.jpg"
-              alt="Sisters & Mom"
-              width={40}
-              height={40}
-              className="rounded-full"
-            />
-            <span className="font-bold text-gray-800">Sisters & Mom</span>
-          </Link>
-        </div>
-      </header>
+      <Header />
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Success Message */}

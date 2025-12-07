@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     if (username === adminUsername && password === adminPassword) {
       // Create session cookie
-      cookies().set('admin_session', 'authenticated', {
+      (await cookies()).set('admin_session', 'authenticated', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

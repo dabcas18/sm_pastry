@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.font-script {
+  font-family: var(--font-script), cursive;
+}
+
 @layer utilities {
   .animate-slide-in {
     animation: slideIn 0.3s ease-out;
