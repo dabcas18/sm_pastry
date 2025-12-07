@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Minus, ShoppingCart, Trash2, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
+import { Plus, Minus, ShoppingCart, Trash2, ArrowLeft, ImageIcon } from 'lucide-react';
 import Header from '@/components/Header';
 import { supabase } from '@/lib/supabase';
 
@@ -12,6 +13,7 @@ type Product = {
   name: string;
   price: number;
   category: string;
+  image_url?: string;
 };
 
 type CartItem = {
@@ -25,6 +27,8 @@ export default function CustomerOrderPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'products' | 'details'>('products');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Customer details
   const [customerName, setCustomerName] = useState('');
@@ -62,7 +66,7 @@ export default function CustomerOrderPage() {
   async function fetchProducts() {
     const { data, error } = await supabase
       .from('Products')
-      .select('id, name, price, category')
+      .select('id, name, price, category, image_url')
       .eq('is_active', true)
       .order('category', { ascending: true })
       .order('name', { ascending: true });
@@ -73,7 +77,20 @@ export default function CustomerOrderPage() {
     }
 
     setProducts(data || []);
+    // Set first category as selected by default
+    if (data && data.length > 0) {
+      const categories = [...new Set(data.map(p => p.category))];
+      setSelectedCategory(categories[0]);
+    }
   }
+
+  // Get unique categories
+  const categories = [...new Set(products.map(p => p.category))];
+
+  // Get products for selected category
+  const filteredProducts = selectedCategory
+    ? products.filter(p => p.category === selectedCategory)
+    : products;
 
   // Group products by category
   const productsByCategory = products.reduce((acc, product) => {
@@ -103,10 +120,11 @@ export default function CustomerOrderPage() {
       return prev.map(item => {
         if (item.product.id === productId) {
           const newQty = item.quantity + delta;
-          return newQty > 0 ? { ...item, quantity: newQty } : item;
+          // If new quantity is 0 or less, mark for removal
+          return { ...item, quantity: newQty };
         }
         return item;
-      }).filter(item => item.quantity > 0);
+      }).filter(item => item.quantity > 0); // Remove items with 0 quantity
     });
   };
 
@@ -201,35 +219,81 @@ export default function CustomerOrderPage() {
 
             <h1 className="text-2xl font-bold text-gray-800 mb-6">Place Your Order</h1>
 
-            {/* Products by Category */}
-            {Object.entries(productsByCategory).map(([category, categoryProducts]) => (
-              <div key={category} className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-700 mb-3 px-1">{category}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {categoryProducts.map(product => {
-                    const cartItem = cart.find(item => item.product.id === product.id);
-                    return (
-                      <div
-                        key={product.id}
-                        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 flex justify-between items-center"
-                      >
-                        <div className="flex-grow">
-                          <p className="font-medium text-gray-800">{product.name}</p>
-                          <p className="text-[#82C3A3] font-semibold">₱{product.price.toLocaleString()}</p>
-                        </div>
+            {/* Category Pills */}
+            <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide mb-6">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition-all ${
+                    selectedCategory === category
+                      ? 'bg-[#82C3A3] text-white shadow-md'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-[#82C3A3] hover:text-[#82C3A3]'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
 
+            {/* Selected Category Title */}
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">{selectedCategory}</h2>
+
+            {/* Horizontal Scrolling Product Cards */}
+            <div
+              ref={scrollContainerRef}
+              className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {filteredProducts.map(product => {
+                const cartItem = cart.find(item => item.product.id === product.id);
+                return (
+                  <div
+                    key={product.id}
+                    className="flex-shrink-0 w-44 sm:w-52 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden snap-start transition-transform hover:scale-[1.02]"
+                  >
+                    {/* Product Image / Placeholder */}
+                    <div className="relative h-36 sm:h-44 bg-gradient-to-br from-[#FFF8F5] to-[#FADBD8] flex items-center justify-center">
+                      {product.image_url ? (
+                        <Image
+                          src={product.image_url}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center text-gray-300">
+                          <ImageIcon size={40} strokeWidth={1} />
+                          <span className="text-xs mt-1">No image</span>
+                        </div>
+                      )}
+                      {/* Quantity Badge */}
+                      {cartItem && (
+                        <div className="absolute top-2 right-2 bg-[#82C3A3] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow">
+                          {cartItem.quantity}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="p-3">
+                      <p className="font-medium text-gray-800 text-sm truncate">{product.name}</p>
+                      <p className="text-[#82C3A3] font-bold mt-1">₱{product.price.toLocaleString()}</p>
+
+                      {/* Add / Quantity Controls */}
+                      <div className="mt-3">
                         {cartItem ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-1">
                             <button
                               onClick={() => updateQuantity(product.id, -1)}
-                              className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-sm hover:bg-gray-100 transition-colors"
                             >
-                              <Minus size={16} />
+                              <Minus size={16} className="text-gray-600" />
                             </button>
-                            <span className="w-8 text-center font-medium">{cartItem.quantity}</span>
+                            <span className="font-semibold text-gray-800">{cartItem.quantity}</span>
                             <button
                               onClick={() => updateQuantity(product.id, 1)}
-                              className="w-8 h-8 flex items-center justify-center rounded-full bg-[#82C3A3] text-white hover:bg-[#6BAF8B] transition-colors"
+                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#82C3A3] text-white hover:bg-[#6BAF8B] transition-colors"
                             >
                               <Plus size={16} />
                             </button>
@@ -237,21 +301,22 @@ export default function CustomerOrderPage() {
                         ) : (
                           <button
                             onClick={() => addToCart(product)}
-                            className="px-4 py-2 bg-[#82C3A3] text-white text-sm font-medium rounded-lg hover:bg-[#6BAF8B] transition-colors"
+                            className="w-full py-2 bg-[#82C3A3] text-white text-sm font-medium rounded-lg hover:bg-[#6BAF8B] transition-colors flex items-center justify-center gap-1"
                           >
-                            Add
+                            <Plus size={16} />
+                            <span>Add</span>
                           </button>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-            {/* Floating Cart Button (Mobile) */}
+            {/* Floating Cart Button */}
             {cart.length > 0 && (
-              <div className="fixed bottom-4 left-4 right-4 sm:hidden">
+              <div className="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto">
                 <button
                   onClick={() => setStep('details')}
                   className="w-full py-4 bg-[#82C3A3] text-white font-semibold rounded-xl shadow-lg hover:bg-[#6BAF8B] transition-colors flex items-center justify-center gap-2"
@@ -261,6 +326,9 @@ export default function CustomerOrderPage() {
                 </button>
               </div>
             )}
+
+            {/* Spacer for floating button */}
+            {cart.length > 0 && <div className="h-20" />}
           </>
         ) : (
           <>
