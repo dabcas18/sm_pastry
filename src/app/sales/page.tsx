@@ -244,19 +244,19 @@ export default function SalesDashboardPage() {
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <div className="bg-[#FADBD8]/30 p-3 rounded-lg border border-[#FADBD8]">
               <div className="flex items-center gap-1.5 mb-1">
-                <TrendingUp className="text-blue-600" size={18} />
-                <p className="text-xs text-blue-600 font-semibold">Overall Sales (All Dates)</p>
+                <TrendingUp className="text-[#8B5A2B]" size={18} />
+                <p className="text-xs text-[#8B5A2B] font-semibold">Overall Sales (All Dates)</p>
               </div>
-              <p className="text-2xl font-bold text-blue-700">₱{overallSales.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-[#6B4423]">₱{overallSales.toFixed(2)}</p>
             </div>
-            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+            <div className="bg-[#82C3A3]/10 p-3 rounded-lg border border-[#82C3A3]">
               <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-green-600 font-bold text-lg">₱</span>
-                <p className="text-xs text-green-600 font-semibold">Selected Date Sales</p>
+                <span className="text-[#2D6A4F] font-bold text-lg">₱</span>
+                <p className="text-xs text-[#2D6A4F] font-semibold">Selected Date Sales</p>
               </div>
-              <p className="text-2xl font-bold text-green-700">₱{selectedDateSales.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-[#1B4332]">₱{selectedDateSales.toFixed(2)}</p>
             </div>
           </div>
 

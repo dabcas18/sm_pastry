@@ -4,16 +4,37 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const adminSession = request.cookies.get('admin_session');
   const { pathname } = request.nextUrl;
+  const hostname = request.headers.get('host') || '';
+
+  // Check if accessing from admin subdomain (not localhost - keep landing page accessible for dev)
+  const isAdminSubdomain = hostname.startsWith('admin.');
+
+  // On admin subdomain, redirect root to login or orders
+  if (isAdminSubdomain && pathname === '/') {
+    if (adminSession) {
+      return NextResponse.redirect(new URL('/orders', request.url));
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 
   // Protected routes that require authentication
-  const protectedRoutes = ['/orders', '/sales', '/production'];
+  const protectedRoutes = ['/orders', '/sales', '/production', '/menu'];
 
   // Check if current path is a protected route
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-  // If trying to access protected route without session, redirect to login
+  // Block /login access unless on admin subdomain or localhost (for dev)
+  const allowLogin = isAdminSubdomain || hostname.includes('localhost');
+  if (pathname === '/login' && !allowLogin && !adminSession) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  // If trying to access protected route without session, redirect to login or home
   if (isProtectedRoute && !adminSession) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    if (allowLogin) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // If logged in and trying to access login page, redirect to orders

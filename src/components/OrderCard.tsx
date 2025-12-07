@@ -34,10 +34,10 @@ type OrderCardProps = {
 };
 
 const STATUS_CONFIG = {
-  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', nextStatus: 'confirmed', nextLabel: 'Confirm Payment' },
-  confirmed: { label: 'Confirmed', color: 'bg-blue-100 text-blue-800', nextStatus: 'ready', nextLabel: 'Mark Ready' },
-  ready: { label: 'Ready', color: 'bg-purple-100 text-purple-800', nextStatus: 'completed', nextLabel: 'Complete Order' },
-  completed: { label: 'Completed', color: 'bg-green-100 text-green-800', nextStatus: null, nextLabel: null },
+  pending: { label: 'Pending', color: 'bg-[#FADBD8] text-[#8B5A2B]', nextStatus: 'confirmed', nextLabel: 'Confirm Payment' },
+  confirmed: { label: 'Confirmed', color: 'bg-[#FFF8F5] text-[#82C3A3] border border-[#82C3A3]', nextStatus: 'ready', nextLabel: 'Mark Ready' },
+  ready: { label: 'Ready', color: 'bg-[#82C3A3] text-white', nextStatus: 'completed', nextLabel: 'Complete Order' },
+  completed: { label: 'Completed', color: 'bg-gray-100 text-gray-500', nextStatus: null, nextLabel: null },
 };
 
 export default function OrderCard({ order, onUpdate }: OrderCardProps) {

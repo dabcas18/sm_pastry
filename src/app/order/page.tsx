@@ -34,17 +34,24 @@ export default function CustomerOrderPage() {
   const [pickupDate, setPickupDate] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
 
-  // Get minimum pickup date (2 days from now, or 3 days if after 8 PM)
+  // Get minimum pickup date (2 days from now, or 3 days if after 8 PM Philippine time)
   const getMinPickupDate = () => {
+    // Get current time in Philippine timezone
     const now = new Date();
-    const currentHour = now.getHours();
+    const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const currentHour = phTime.getHours();
 
     // If after 8 PM (20:00), add 3 days instead of 2
     const daysToAdd = currentHour >= 20 ? 3 : 2;
 
-    const minDate = new Date();
+    const minDate = new Date(phTime);
     minDate.setDate(minDate.getDate() + daysToAdd);
-    return minDate.toISOString().split('T')[0];
+
+    // Format as YYYY-MM-DD using local values
+    const year = minDate.getFullYear();
+    const month = String(minDate.getMonth() + 1).padStart(2, '0');
+    const day = String(minDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   useEffect(() => {
@@ -382,7 +389,7 @@ export default function CustomerOrderPage() {
                     onClick={() => setPaymentMethod('gcash')}
                     className={`p-4 rounded-lg border-2 transition-colors ${
                       paymentMethod === 'gcash'
-                        ? 'border-[#007DFE] bg-blue-50'
+                        ? 'border-[#007DFE] bg-[#007DFE]/10'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >

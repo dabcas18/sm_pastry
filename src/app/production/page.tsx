@@ -339,8 +339,8 @@ export default function ProductionPage() {
                             {customer.is_paid ? 'Paid' : 'Unpaid'}
                           </p>
                           {customer.is_completed && (
-                            <span className="text-[10px] font-medium text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
-                              ✓ Delivered
+                            <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                              ✓ Completed
                             </span>
                           )}
                         </div>

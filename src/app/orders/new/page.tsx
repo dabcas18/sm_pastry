@@ -32,9 +32,43 @@ export default function OrderFormPage() {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [quantity, setQuantity] = useState<number | ''>(1);
   const [customerName, setCustomerName] = useState('');
-  const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  // Get current date in Philippine timezone
+  const getPhilippineDate = () => {
+    const now = new Date();
+    const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const year = phTime.getFullYear();
+    const month = String(phTime.getMonth() + 1).padStart(2, '0');
+    const day = String(phTime.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const [orderDate, setOrderDate] = useState(getPhilippineDate());
+  const [pickupDate, setPickupDate] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'gcash' | 'maribank'>('gcash');
+  const [sendEmail, setSendEmail] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
+
+  // Get minimum pickup date (2 days from now, or 3 days if after 8 PM Philippine time)
+  const getMinPickupDate = () => {
+    const now = new Date();
+    const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const currentHour = phTime.getHours();
+    const daysToAdd = currentHour >= 20 ? 3 : 2;
+    const minDate = new Date(phTime);
+    minDate.setDate(minDate.getDate() + daysToAdd);
+    const year = minDate.getFullYear();
+    const month = String(minDate.getMonth() + 1).padStart(2, '0');
+    const day = String(minDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Phone number handler - only allow numbers
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    setPhone(value);
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -136,38 +170,79 @@ export default function OrderFormPage() {
       return;
     }
 
+    // If sending email, require email and phone
+    if (sendEmail && (!email.trim() || !phone.trim())) {
+      alert('Email and phone number are required to send confirmation email');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Create order
-      const { data: order, error: orderError } = await supabase
-        .from('Orders')
-        .insert({
-          customer_name: customerName,
-          order_date: orderDate,
-          total_amount: calculateTotal(),
-          is_paid: false,
-          is_completed: false
-        })
-        .select()
-        .single();
+      // If sending email, use the API endpoint
+      if (sendEmail && email.trim()) {
+        const response = await fetch('/api/orders/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: customerName.trim(),
+            phone: phone.trim(),
+            email: email.trim(),
+            paymentMethod,
+            pickupDate: pickupDate || null,
+            orderNotes: '',
+            items: orderItems.map(item => ({
+              productId: item.product_id,
+              quantity: item.quantity,
+              unitPrice: item.unit_price,
+              subtotal: item.subtotal
+            })),
+            totalAmount: calculateTotal()
+          })
+        });
 
-      if (orderError) throw orderError;
+        const data = await response.json();
 
-      // Create order items
-      const orderItemsData = orderItems.map(item => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        subtotal: item.subtotal
-      }));
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create order');
+        }
+      } else {
+        // Create order directly without email
+        const { data: order, error: orderError } = await supabase
+          .from('Orders')
+          .insert({
+            customer_name: customerName,
+            phone_number: phone || null,
+            email: email || null,
+            order_date: orderDate,
+            pickup_date: pickupDate || null,
+            payment_method: paymentMethod,
+            total_amount: calculateTotal(),
+            status: 'pending',
+            is_paid: false,
+            is_completed: false,
+            is_production_complete: false
+          })
+          .select()
+          .single();
 
-      const { error: itemsError } = await supabase
-        .from('OrderItems')
-        .insert(orderItemsData);
+        if (orderError) throw orderError;
 
-      if (itemsError) throw itemsError;
+        // Create order items
+        const orderItemsData = orderItems.map(item => ({
+          order_id: order.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          subtotal: item.subtotal
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('OrderItems')
+          .insert(orderItemsData);
+
+        if (itemsError) throw itemsError;
+      }
 
       // Success - redirect to orders page
       router.push('/orders');
@@ -208,6 +283,33 @@ export default function OrderFormPage() {
                   />
                 </div>
                 <div>
+                  <label htmlFor="phone" className="block text-xs font-medium text-gray-600 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    inputMode="numeric"
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    placeholder="09171234567"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#A9DFBF] focus:border-[#A9DFBF] text-sm"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-xs font-medium text-gray-600 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="customer@email.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#A9DFBF] focus:border-[#A9DFBF] text-sm"
+                  />
+                </div>
+                <div>
                   <label htmlFor="order_date" className="block text-xs font-medium text-gray-600 mb-1">Order Date</label>
                   <input
                     type="date"
@@ -218,7 +320,60 @@ export default function OrderFormPage() {
                     required
                   />
                 </div>
+                <div>
+                  <label htmlFor="pickup_date" className="block text-xs font-medium text-gray-600 mb-1">Pickup Date</label>
+                  <input
+                    type="date"
+                    id="pickup_date"
+                    value={pickupDate}
+                    onChange={(e) => setPickupDate(e.target.value)}
+                    min={getMinPickupDate()}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#A9DFBF] focus:border-[#A9DFBF] text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Payment Method</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('gcash')}
+                      className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        paymentMethod === 'gcash'
+                          ? 'bg-[#007DFE] text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      GCash
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('maribank')}
+                      className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        paymentMethod === 'maribank'
+                          ? 'bg-[#F26522] text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      MariBank
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              {/* Send Email Option */}
+              {email && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={sendEmail}
+                      onChange={(e) => setSendEmail(e.target.checked)}
+                      className="w-4 h-4 text-[#82C3A3] border-gray-300 rounded focus:ring-[#82C3A3]"
+                    />
+                    <span className="text-sm text-gray-700">Send confirmation email to customer</span>
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Add Order Item */}

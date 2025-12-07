@@ -1,12 +1,12 @@
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#FFF8F5]">
-      {/* Header with Admin Login */}
+      {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="container mx-auto px-6 py-4 flex justify-center items-center">
           <div className="flex items-center gap-3">
             <Image
               src="/logo.jpg"
@@ -22,12 +22,6 @@ export default function LandingPage() {
               </h2>
             </div>
           </div>
-          <Link
-            href="/login"
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            Admin Login
-          </Link>
         </div>
       </header>
 

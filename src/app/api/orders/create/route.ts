@@ -50,6 +50,11 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get current date in Philippine timezone (YYYY-MM-DD format)
+    const now = new Date();
+    const phDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const orderDate = `${phDate.getFullYear()}-${String(phDate.getMonth() + 1).padStart(2, '0')}-${String(phDate.getDate()).padStart(2, '0')}`;
+
     // Create order
     const { data: order, error: orderError } = await supabase
       .from('Orders')
@@ -59,6 +64,7 @@ export async function POST(request: Request) {
         email: email,
         payment_method: paymentMethod,
         pickup_date: pickupDate,
+        order_date: orderDate,
         order_notes: orderNotes || null,
         total_amount: totalAmount,
         status: 'pending',
@@ -167,35 +173,37 @@ export async function POST(request: Request) {
               ${orderNotes ? `<p><strong>Notes:</strong> ${orderNotes}</p>` : ''}
             </div>
 
-            <div style="background-color: #fff3cd; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ffc107;">
-              <h3 style="color: #856404; margin-top: 0;">Payment Instructions</h3>
-              <p style="color: #856404;">Please pay using <strong>${paymentMethodName}</strong> by scanning the QR code below:</p>
-              <div style="text-align: center; margin: 20px 0;">
-                <img src="${qrCodeUrl}" alt="${paymentMethodName} QR Code" style="max-width: 250px; border-radius: 8px;">
+            <div style="background-color: #FDF2F0; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #FADBD8;">
+              <h3 style="color: #8B5A2B; margin-top: 0;">Payment Instructions</h3>
+              <p style="color: #6B4423;">Please pay <strong>₱${totalAmount.toLocaleString()}</strong> using <strong>${paymentMethodName}</strong>:</p>
+
+              <div style="background-color: white; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
+                <img src="https://sistersandmom.site/${paymentMethod}-qr.jpg" alt="${paymentMethodName} QR Code" style="max-width: 200px; border-radius: 8px; display: block; margin: 0 auto;">
               </div>
-              <p style="color: #856404;"><strong>Amount to pay: ₱${totalAmount.toLocaleString()}</strong></p>
+
+              <p style="color: #6B4423; font-size: 14px; text-align: center;">If QR doesn't load: <a href="https://sistersandmom.site/order/confirmation?orderNumber=${order.order_number}" style="color: #82C3A3; font-weight: bold;">View payment details on our website</a></p>
             </div>
 
-            <div style="background-color: #d4edda; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #28a745;">
-              <h3 style="color: #155724; margin-top: 0;">Next Steps</h3>
-              <ol style="color: #155724; padding-left: 20px;">
-                <li>Pay using the QR code above</li>
+            <div style="background-color: #E8F5EC; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #A9DFBF;">
+              <h3 style="color: #2D6A4F; margin-top: 0;">Next Steps</h3>
+              <ol style="color: #2D6A4F; padding-left: 20px;">
+                <li>Pay ₱${totalAmount.toLocaleString()} using ${paymentMethodName} (scan QR code above)</li>
                 <li>Take a screenshot of your payment receipt</li>
-                <li>Send the screenshot to our Instagram: <a href="https://ig.me/m/bysistersandmom" style="color: #155724; font-weight: bold;">@bysistersandmom</a></li>
+                <li>Send the screenshot to our Instagram: <a href="https://ig.me/m/bysistersandmom" style="color: #1B4332; font-weight: bold;">@bysistersandmom</a></li>
                 <li>Include your order number: <strong>${order.order_number}</strong></li>
                 <li>Wait for our confirmation message</li>
               </ol>
             </div>
 
-            <div style="background-color: #e7f3ff; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #0066cc;">
-              <h3 style="color: #004080; margin-top: 0;">Courier Booking (When Order is Ready)</h3>
-              <p style="color: #004080;">When you receive notification that your order is ready:</p>
-              <ul style="color: #004080; padding-left: 20px;">
-                <li><strong>Shop Address:</strong> Dau, Mabalacat, Pampanga</li>
+            <div style="background-color: #E8F5EC; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #82C3A3;">
+              <h3 style="color: #1B4332; margin-top: 0;">Courier Booking (When Order is Ready)</h3>
+              <p style="color: #2D6A4F;">When you receive notification that your order is ready:</p>
+              <ul style="color: #2D6A4F; padding-left: 20px;">
+                <li><strong>Shop Address:</strong> Blk 13 Lot 14 Dahlia St. Pineda Subdivision, Dau, Mabalacat Pampanga, Philippines 2010</li>
                 <li><strong>Contact Number:</strong> 0917-815-8007</li>
                 <li><strong>Order Number:</strong> ${order.order_number}</li>
               </ul>
-              <p style="color: #004080; font-size: 14px;">Book via Grab or Maxim and provide the order number to the courier.</p>
+              <p style="color: #2D6A4F; font-size: 14px;">Book via Grab or Maxim and provide the order number to the courier.</p>
             </div>
 
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">

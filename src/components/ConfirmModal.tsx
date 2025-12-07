@@ -10,7 +10,7 @@ type ConfirmModalProps = {
   cancelText?: string;
   onConfirm: () => void;
   onCancel: () => void;
-  confirmColor?: 'red' | 'green' | 'blue';
+  confirmColor?: 'red' | 'green' | 'primary';
 };
 
 export default function ConfirmModal({
@@ -26,9 +26,9 @@ export default function ConfirmModal({
   if (!isOpen) return null;
 
   const colorClasses = {
-    red: 'bg-red-500 hover:bg-red-600',
-    green: 'bg-green-500 hover:bg-green-600',
-    blue: 'bg-blue-500 hover:bg-blue-600'
+    red: 'bg-[#E57373] hover:bg-[#D75A5A]',
+    green: 'bg-[#82C3A3] hover:bg-[#6BAF8B]',
+    primary: 'bg-[#82C3A3] hover:bg-[#6BAF8B]'
   };
 
   return (

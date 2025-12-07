@@ -50,36 +50,33 @@ function TrackOrderContent() {
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [showSearchForm, setShowSearchForm] = useState(true);
 
-  // Auto-refresh order status every 30 seconds when order is found
+  // Supabase Realtime subscription for order updates
   useEffect(() => {
     if (!order || order.is_completed) return;
 
-    const interval = setInterval(() => {
-      refreshOrderStatus();
-    }, 30000); // 30 seconds
+    const channel = supabase
+      .channel(`order-${order.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'Orders',
+          filter: `id=eq.${order.id}`
+        },
+        (payload) => {
+          setOrder(payload.new as Order);
+          setLastUpdated(new Date());
+        }
+      )
+      .subscribe();
 
-    return () => clearInterval(interval);
-  }, [order]);
-
-  async function refreshOrderStatus() {
-    if (!order) return;
-
-    try {
-      const { data: orderData } = await supabase
-        .from('Orders')
-        .select('*')
-        .eq('id', order.id)
-        .single();
-
-      if (orderData) {
-        setOrder(orderData);
-        setLastUpdated(new Date());
-      }
-    } catch (err) {
-      console.error('Error refreshing order:', err);
-    }
-  }
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [order?.id, order?.is_completed]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +107,7 @@ function TrackOrderContent() {
       }
 
       setOrder(orderData);
+      setShowSearchForm(false); // Collapse form after finding order
 
       // Fetch order items
       const { data: itemsData } = await supabase
@@ -130,6 +128,23 @@ function TrackOrderContent() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Phone number input handler - only allow numbers
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    setPhone(value);
+  };
+
+  // Reset search to track different order
+  const handleSearchAgain = () => {
+    setShowSearchForm(true);
+    setOrder(null);
+    setOrderItems([]);
+    setOrderNumber('');
+    setPhone('');
+    setSearched(false);
+    setError('');
   };
 
   const getStatusIndex = (order: Order) => {
@@ -174,49 +189,71 @@ function TrackOrderContent() {
 
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Track Your Order</h1>
 
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Order Number
-              </label>
-              <input
-                type="text"
-                value={orderNumber}
-                onChange={(e) => setOrderNumber(e.target.value.toUpperCase())}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent uppercase"
-                placeholder="e.g., JUA-X7K9M"
-              />
+        {/* Search Form - Collapsible */}
+        {showSearchForm ? (
+          <form onSubmit={handleSearch} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Order Number
+                </label>
+                <input
+                  type="text"
+                  value={orderNumber}
+                  onChange={(e) => setOrderNumber(e.target.value.toUpperCase())}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent uppercase"
+                  placeholder="e.g., JUA-X7K9M"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent"
+                  placeholder="e.g., 09171234567"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-[#82C3A3] text-white font-semibold rounded-lg hover:bg-[#6BAF8B] transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <span>Searching...</span>
+                ) : (
+                  <>
+                    <Search size={18} />
+                    <span>Track Order</span>
+                  </>
+                )}
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent"
-                placeholder="e.g., 09171234567"
-              />
+          </form>
+        ) : order && (
+          <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#82C3A3]/20 rounded-full flex items-center justify-center">
+                <Package className="text-[#82C3A3]" size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-[#82C3A3]">{order.order_number}</p>
+                <p className="text-xs text-gray-500">{order.customer_name}</p>
+              </div>
             </div>
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-[#82C3A3] text-white font-semibold rounded-lg hover:bg-[#6BAF8B] transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
+              onClick={handleSearchAgain}
+              className="text-sm text-gray-500 hover:text-[#82C3A3] transition-colors"
             >
-              {loading ? (
-                <span>Searching...</span>
-              ) : (
-                <>
-                  <Search size={18} />
-                  <span>Track Order</span>
-                </>
-              )}
+              Track different order
             </button>
           </div>
-        </form>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -228,11 +265,12 @@ function TrackOrderContent() {
         {/* Order Details */}
         {order && (
           <>
-            {/* Auto-refresh indicator */}
+            {/* Live updates indicator */}
             {!order.is_completed && (
-              <div className="text-center text-xs text-gray-400 mb-2">
-                Auto-refreshing every 30 seconds
-                {lastUpdated && ` • Last updated: ${lastUpdated.toLocaleTimeString()}`}
+              <div className="text-center text-xs text-gray-400 mb-2 flex items-center justify-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span>Live updates enabled</span>
+                {lastUpdated && <span> • Updated: {lastUpdated.toLocaleTimeString()}</span>}
               </div>
             )}
 
@@ -311,11 +349,11 @@ function TrackOrderContent() {
 
             {/* Ready for Pickup Instructions */}
             {order.status === 'ready' && !order.is_completed && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-                <h2 className="font-semibold text-blue-800 mb-3">Ready for Pickup!</h2>
-                <p className="text-blue-700 mb-3">Your order is ready. Please book a courier (Grab/Maxim) with these details:</p>
-                <ul className="text-blue-700 space-y-1">
-                  <li><strong>Shop Address:</strong> Dau, Mabalacat, Pampanga</li>
+              <div className="bg-[#82C3A3]/10 border border-[#82C3A3] rounded-xl p-4 mb-6">
+                <h2 className="font-semibold text-[#1B4332] mb-3">Ready for Pickup!</h2>
+                <p className="text-[#2D6A4F] mb-3">Your order is ready. Please book a courier (Grab/Maxim) with these details:</p>
+                <ul className="text-[#2D6A4F] space-y-1">
+                  <li><strong>Shop Address:</strong> Blk 13 Lot 14 Dahlia St. Pineda Subdivision, Dau, Mabalacat Pampanga, Philippines 2010</li>
                   <li><strong>Contact Number:</strong> 0917-815-8007</li>
                   <li><strong>Order Number:</strong> {order.order_number}</li>
                 </ul>

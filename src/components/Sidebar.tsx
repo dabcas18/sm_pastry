@@ -66,10 +66,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className={`flex items-center gap-3 hover:opacity-80 transition-opacity ${isCollapsed ? 'justify-center w-full' : ''}`}
+                onClick={() => {
+                  // Only toggle collapse on desktop (lg screens)
+                  if (window.innerWidth >= 1024) {
+                    setIsCollapsed(!isCollapsed);
+                  }
+                }}
+                className={`flex items-center gap-3 hover:opacity-80 transition-opacity ${isCollapsed ? 'lg:justify-center lg:w-full' : ''}`}
               >
-                <div className={`rounded-full overflow-hidden flex-shrink-0 ${isCollapsed ? 'h-10 w-10' : 'h-16 w-16'}`}>
+                <div className={`rounded-full overflow-hidden flex-shrink-0 h-16 w-16 ${isCollapsed ? 'lg:h-10 lg:w-10' : ''}`}>
                   <Image
                     src="/logo.jpg"
                     alt="Sisters Mom Logo"
@@ -78,12 +83,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     className="object-cover"
                   />
                 </div>
-                {!isCollapsed && (
-                  <div className="flex-1">
-                    <h2 className="font-bold text-gray-800 text-sm">Sisters & Mom</h2>
-                    <p className="text-xs text-gray-500">Pastry Shop</p>
-                  </div>
-                )}
+                <div className={`flex-1 ${isCollapsed ? 'lg:hidden' : ''}`}>
+                  <h2 className="font-bold text-gray-800 text-sm">Sisters & Mom</h2>
+                  <p className="text-xs text-gray-500">Pastry Shop</p>
+                </div>
               </button>
               {!isCollapsed && (
                 <button
@@ -119,11 +122,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     isActive
                       ? 'bg-[#A9DFBF] text-white'
                       : 'text-gray-700 hover:bg-gray-100'
-                  } ${isCollapsed ? 'justify-center' : ''}`}
+                  } ${isCollapsed ? 'lg:justify-center' : ''}`}
                   title={isCollapsed ? item.label : ''}
                 >
                   <Icon size={20} className="flex-shrink-0" />
-                  {!isCollapsed && <span className="font-medium">{item.label}</span>}
+                  <span className={`font-medium ${isCollapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
                 </Link>
               );
             })}
@@ -134,18 +137,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="relative">
               <button
                 onClick={() => setShowLogout(!showLogout)}
-                className={`flex items-center gap-3 px-3 py-2.5 w-full text-gray-700 hover:bg-gray-100 rounded-md transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+                className={`flex items-center gap-3 px-3 py-2.5 w-full text-gray-700 hover:bg-gray-100 rounded-md transition-colors ${isCollapsed ? 'lg:justify-center' : ''}`}
                 title={isCollapsed ? username : ''}
               >
                 <div className="h-8 w-8 rounded-full bg-[#A9DFBF] flex items-center justify-center flex-shrink-0">
                   <User size={16} className="text-white" />
                 </div>
-                {!isCollapsed && (
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-semibold text-gray-800">{username}</p>
-                    <p className="text-xs text-gray-500">Administrator</p>
-                  </div>
-                )}
+                <div className={`flex-1 text-left ${isCollapsed ? 'lg:hidden' : ''}`}>
+                  <p className="text-sm font-semibold text-gray-800">{username}</p>
+                  <p className="text-xs text-gray-500">Administrator</p>
+                </div>
               </button>
 
               {/* Logout Dropdown */}
