@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Plus, Minus, ShoppingCart, Trash2, ArrowLeft, ImageIcon } from 'lucide-react';
+import { Plus, Minus, ShoppingCart, Trash2, ArrowLeft, ImageIcon, User, Calendar, CreditCard, FileText } from 'lucide-react';
 import Header from '@/components/Header';
 import { supabase } from '@/lib/supabase';
 
@@ -28,7 +28,6 @@ export default function CustomerOrderPage() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'products' | 'details'>('products');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Customer details
   const [customerName, setCustomerName] = useState('');
@@ -208,52 +207,52 @@ export default function CustomerOrderPage() {
         ) : undefined
       } />
 
-      <main className="container mx-auto px-4 py-6 max-w-4xl">
+      <main className="container mx-auto px-4 py-4 max-w-4xl">
         {step === 'products' ? (
           <>
-            {/* Back to home */}
-            <Link href="/" className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-800 mb-4">
-              <ArrowLeft size={18} />
-              <span>Back to home</span>
-            </Link>
-
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Place Your Order</h1>
-
-            {/* Category Pills */}
-            <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide mb-6">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition-all ${
-                    selectedCategory === category
-                      ? 'bg-[#82C3A3] text-white shadow-md'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:border-[#82C3A3] hover:text-[#82C3A3]'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+            {/* Title with back button */}
+            <div className="flex items-center gap-2 mb-3">
+              <Link
+                href="/"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors shadow-sm"
+              >
+                <ArrowLeft size={16} />
+              </Link>
+              <h1 className="text-xl font-bold text-gray-800">Place Your Order</h1>
             </div>
 
-            {/* Selected Category Title */}
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">{selectedCategory}</h2>
+            {/* Category Pills - Sticky */}
+            <div className="sticky top-0 z-10 bg-[#FFF8F5] pt-2 pb-4 -mx-4 px-4">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {categories.map(category => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-3 py-1.5 rounded-full whitespace-nowrap text-sm font-medium transition-all ${
+                      selectedCategory === category
+                        ? 'bg-[#E8A87C] text-white shadow-sm'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:border-[#E8A87C] hover:text-[#E8A87C]'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+              {/* Selected Category Title */}
+              <h2 className="text-lg font-semibold text-gray-700 mt-2">{selectedCategory}</h2>
+            </div>
 
-            {/* Horizontal Scrolling Product Cards */}
-            <div
-              ref={scrollContainerRef}
-              className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
+            {/* Product Cards - Responsive Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {filteredProducts.map(product => {
                 const cartItem = cart.find(item => item.product.id === product.id);
                 return (
                   <div
                     key={product.id}
-                    className="flex-shrink-0 w-44 sm:w-52 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden snap-start transition-transform hover:scale-[1.02]"
+                    className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-transform hover:scale-[1.02]"
                   >
                     {/* Product Image / Placeholder */}
-                    <div className="relative h-36 sm:h-44 bg-gradient-to-br from-[#FFF8F5] to-[#FADBD8] flex items-center justify-center">
+                    <div className="relative h-32 sm:h-40 lg:h-44 bg-gradient-to-br from-[#FFF8F5] to-[#FADBD8] flex items-center justify-center">
                       {product.image_url ? (
                         <Image
                           src={product.image_url}
@@ -263,47 +262,47 @@ export default function CustomerOrderPage() {
                         />
                       ) : (
                         <div className="flex flex-col items-center text-gray-300">
-                          <ImageIcon size={40} strokeWidth={1} />
+                          <ImageIcon size={32} strokeWidth={1} className="sm:w-10 sm:h-10" />
                           <span className="text-xs mt-1">No image</span>
                         </div>
                       )}
                       {/* Quantity Badge */}
                       {cartItem && (
-                        <div className="absolute top-2 right-2 bg-[#82C3A3] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow">
+                        <div className="absolute top-2 right-2 bg-[#82C3A3] text-white text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow">
                           {cartItem.quantity}
                         </div>
                       )}
                     </div>
 
                     {/* Product Info */}
-                    <div className="p-3">
-                      <p className="font-medium text-gray-800 text-sm truncate">{product.name}</p>
-                      <p className="text-[#82C3A3] font-bold mt-1">₱{product.price.toLocaleString()}</p>
+                    <div className="p-2 sm:p-3">
+                      <p className="font-medium text-gray-800 text-xs sm:text-sm leading-tight min-h-[2rem] sm:min-h-[2.5rem]">{product.name}</p>
+                      <p className="text-[#E8A87C] font-bold mt-1 text-right text-sm sm:text-base">₱{product.price.toLocaleString()}</p>
 
                       {/* Add / Quantity Controls */}
-                      <div className="mt-3">
+                      <div className="mt-2 sm:mt-3">
                         {cartItem ? (
                           <div className="flex items-center justify-between bg-gray-50 rounded-lg p-1">
                             <button
                               onClick={() => updateQuantity(product.id, -1)}
-                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-sm hover:bg-gray-100 transition-colors"
+                              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-white shadow-sm hover:bg-gray-100 transition-colors"
                             >
-                              <Minus size={16} className="text-gray-600" />
+                              <Minus size={14} className="text-gray-600 sm:w-4 sm:h-4" />
                             </button>
-                            <span className="font-semibold text-gray-800">{cartItem.quantity}</span>
+                            <span className="font-semibold text-gray-800 text-sm">{cartItem.quantity}</span>
                             <button
                               onClick={() => updateQuantity(product.id, 1)}
-                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#82C3A3] text-white hover:bg-[#6BAF8B] transition-colors"
+                              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-[#82C3A3] text-white hover:bg-[#6BAF8B] transition-colors"
                             >
-                              <Plus size={16} />
+                              <Plus size={14} className="sm:w-4 sm:h-4" />
                             </button>
                           </div>
                         ) : (
                           <button
                             onClick={() => addToCart(product)}
-                            className="w-full py-2 bg-[#82C3A3] text-white text-sm font-medium rounded-lg hover:bg-[#6BAF8B] transition-colors flex items-center justify-center gap-1"
+                            className="w-full py-1.5 sm:py-2 bg-[#82C3A3] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#6BAF8B] transition-colors flex items-center justify-center gap-1"
                           >
-                            <Plus size={16} />
+                            <Plus size={14} className="sm:w-4 sm:h-4" />
                             <span>Add</span>
                           </button>
                         )}
@@ -332,50 +331,87 @@ export default function CustomerOrderPage() {
           </>
         ) : (
           <>
-            {/* Back to products */}
-            <button
-              onClick={() => setStep('products')}
-              className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-800 mb-4"
-            >
-              <ArrowLeft size={18} />
-              <span>Back to products</span>
-            </button>
+            {/* Title with back button */}
+            <div className="flex items-center gap-2 mb-3">
+              <button
+                onClick={() => setStep('products')}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors shadow-sm"
+              >
+                <ArrowLeft size={16} />
+              </button>
+              <h1 className="text-xl font-bold text-gray-800">Complete Your Order</h1>
+            </div>
 
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Complete Your Order</h1>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form id="order-form" onSubmit={handleSubmit} className="space-y-4 pb-24">
               {/* Cart Summary */}
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <h2 className="font-semibold text-gray-800 mb-3">Order Summary</h2>
-                <div className="space-y-2">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart size={18} className="text-gray-500" />
+                    <h2 className="font-semibold text-gray-800">Order Summary</h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStep('products')}
+                    className="text-sm text-[#82C3A3] hover:underline"
+                  >
+                    + Add more
+                  </button>
+                </div>
+                <div className="space-y-3">
                   {cart.map(item => (
-                    <div key={item.product.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                      <div className="flex-grow">
-                        <p className="font-medium text-gray-800">{item.product.name}</p>
-                        <p className="text-sm text-gray-500">₱{item.product.price.toLocaleString()} × {item.quantity}</p>
+                    <div key={item.product.id} className="flex items-center gap-2 py-2 border-b border-gray-100 last:border-0">
+                      {/* Product Thumbnail */}
+                      <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-gradient-to-br from-[#FFF8F5] to-[#FADBD8] flex items-center justify-center overflow-hidden">
+                        {item.product.image_url ? (
+                          <Image
+                            src={item.product.image_url}
+                            alt={item.product.name}
+                            width={40}
+                            height={40}
+                            className="object-cover w-full h-full"
+                          />
+                        ) : (
+                          <ImageIcon size={16} className="text-gray-300" />
+                        )}
                       </div>
-                      <div className="flex items-center gap-3">
-                        <p className="font-semibold text-gray-800">₱{(item.product.price * item.quantity).toLocaleString()}</p>
+                      <div className="flex-grow min-w-0">
+                        <p className="font-medium text-gray-800 text-xs leading-tight">{item.product.name}</p>
+                        <p className="text-xs text-gray-400">₱{item.product.price.toLocaleString()}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => removeFromCart(item.product.id)}
-                          className="text-red-500 hover:text-red-700"
+                          onClick={() => updateQuantity(item.product.id, -1)}
+                          className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                         >
-                          <Trash2 size={18} />
+                          <Minus size={12} className="text-gray-600" />
+                        </button>
+                        <span className="w-5 text-center font-semibold text-xs">{item.quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.product.id, 1)}
+                          className="w-6 h-6 flex items-center justify-center rounded-full bg-[#82C3A3] hover:bg-[#6BAF8B] transition-colors"
+                        >
+                          <Plus size={12} className="text-white" />
                         </button>
                       </div>
+                      <p className="font-semibold text-gray-800 text-xs w-12 text-right">₱{(item.product.price * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
                 <div className="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
-                  <span className="text-lg font-bold text-gray-800">Total</span>
+                  <span className="font-bold text-gray-800">Total</span>
                   <span className="text-lg font-bold text-[#82C3A3]">₱{getCartTotal().toLocaleString()}</span>
                 </div>
               </div>
 
               {/* Customer Details */}
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <h2 className="font-semibold text-gray-800 mb-3">Your Details</h2>
+                <div className="flex items-center gap-2 mb-3">
+                  <User size={18} className="text-gray-500" />
+                  <h2 className="font-semibold text-gray-800">Your Details</h2>
+                </div>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -421,7 +457,10 @@ export default function CustomerOrderPage() {
 
               {/* Pickup Date */}
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <h2 className="font-semibold text-gray-800 mb-3">Pickup Date</h2>
+                <div className="flex items-center gap-2 mb-1">
+                  <Calendar size={18} className="text-gray-500" />
+                  <h2 className="font-semibold text-gray-800">Pickup Date</h2>
+                </div>
                 <p className="text-sm text-gray-500 mb-3">Orders require at least 2 days to prepare.</p>
                 <input
                   type="date"
@@ -435,7 +474,10 @@ export default function CustomerOrderPage() {
 
               {/* Payment Method */}
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <h2 className="font-semibold text-gray-800 mb-3">Payment Method</h2>
+                <div className="flex items-center gap-2 mb-1">
+                  <CreditCard size={18} className="text-gray-500" />
+                  <h2 className="font-semibold text-gray-800">Payment Method</h2>
+                </div>
                 <p className="text-sm text-gray-500 mb-3">Select how you will pay. QR codes will be shown after placing order.</p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -465,7 +507,10 @@ export default function CustomerOrderPage() {
 
               {/* Order Notes */}
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <h2 className="font-semibold text-gray-800 mb-3">Order Notes (Optional)</h2>
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText size={18} className="text-gray-500" />
+                  <h2 className="font-semibold text-gray-800">Order Notes <span className="font-normal text-gray-400">(Optional)</span></h2>
+                </div>
                 <textarea
                   value={orderNotes}
                   onChange={(e) => setOrderNotes(e.target.value)}
@@ -475,15 +520,19 @@ export default function CustomerOrderPage() {
                 />
               </div>
 
-              {/* Submit Button */}
+            </form>
+
+            {/* Sticky Submit Button */}
+            <div className="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto">
               <button
                 type="submit"
+                form="order-form"
                 disabled={loading || cart.length === 0}
                 className="w-full py-4 bg-[#82C3A3] text-white font-semibold rounded-xl shadow-lg hover:bg-[#6BAF8B] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? 'Placing Order...' : `Place Order - ₱${getCartTotal().toLocaleString()}`}
               </button>
-            </form>
+            </div>
           </>
         )}
       </main>

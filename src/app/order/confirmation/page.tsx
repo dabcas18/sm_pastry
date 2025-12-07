@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle, Copy, Check, ExternalLink, Instagram } from 'lucide-react';
+import { CheckCircle, Copy, Check, ExternalLink, Instagram, Download, Calendar } from 'lucide-react';
 import Header from '@/components/Header';
 import { supabase } from '@/lib/supabase';
 
@@ -87,6 +87,24 @@ function OrderConfirmationContent() {
     }
   };
 
+  const saveQRCode = async () => {
+    const qrImage = order?.payment_method === 'gcash' ? '/gcash-qr.jpg' : '/maribank-qr.jpg';
+    try {
+      const response = await fetch(qrImage);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${order?.payment_method}-qr-code.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error saving QR code:', error);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-PH', {
       weekday: 'long',
@@ -127,30 +145,41 @@ function OrderConfirmationContent() {
     <div className="min-h-screen bg-[#FFF8F5]">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        {/* Success Message */}
-        <div className="text-center mb-8">
+      <main className="container mx-auto px-4 py-6 max-w-2xl">
+        {/* Success Message - Personalized */}
+        <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
             <CheckCircle className="w-10 h-10 text-green-500" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Order Placed Successfully!</h1>
-          <p className="text-gray-600">A confirmation email has been sent to {order.email}</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Thank you, {order.customer_name.split(' ')[0]}!</h1>
+          <p className="text-gray-600">Your order has been placed successfully</p>
+          <p className="text-sm text-gray-500 mt-1">Confirmation sent to {order.email}</p>
         </div>
 
-        {/* Order Number */}
-        <div className="bg-[#82C3A3] text-white rounded-xl p-6 text-center mb-6">
-          <p className="text-sm opacity-90 mb-1">Your Order Number</p>
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-3xl font-bold tracking-wider">{order.order_number}</span>
-            <button
-              onClick={copyOrderNumber}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              title="Copy order number"
-            >
-              {copied ? <Check size={20} /> : <Copy size={20} />}
-            </button>
+        {/* Order Number + Pickup Date Card */}
+        <div className="bg-[#82C3A3] text-white rounded-xl p-5 mb-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-xs opacity-80 mb-1">Order Number</p>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold tracking-wider">{order.order_number}</span>
+                <button
+                  onClick={copyOrderNumber}
+                  className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                  title="Copy order number"
+                >
+                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                </button>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs opacity-80 mb-1">Pickup Date</p>
+              <div className="flex items-center gap-2 justify-end">
+                <Calendar size={16} className="opacity-80" />
+                <span className="font-semibold">{formatDate(order.pickup_date)}</span>
+              </div>
+            </div>
           </div>
-          <p className="text-sm opacity-90 mt-2">Save this number for tracking</p>
         </div>
 
         {/* Order Summary */}
@@ -171,10 +200,11 @@ function OrderConfirmationContent() {
             <span className="text-lg font-bold text-gray-800">Total</span>
             <span className="text-lg font-bold text-[#82C3A3]">₱{Number(order.total_amount).toLocaleString()}</span>
           </div>
-          <div className="mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600">
-            <p><strong>Pickup Date:</strong> {formatDate(order.pickup_date)}</p>
-            {order.order_notes && <p><strong>Notes:</strong> {order.order_notes}</p>}
-          </div>
+          {order.order_notes && (
+            <div className="mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600">
+              <p><strong>Notes:</strong> {order.order_notes}</p>
+            </div>
+          )}
         </div>
 
         {/* Payment QR Code */}
@@ -184,11 +214,18 @@ function OrderConfirmationContent() {
             <Image
               src={qrImage}
               alt={`${paymentMethodName} QR Code`}
-              width={250}
-              height={250}
+              width={220}
+              height={220}
               className="rounded-lg mb-3"
             />
-            <p className="text-amber-800 font-bold text-lg">Amount: ₱{Number(order.total_amount).toLocaleString()}</p>
+            <p className="text-amber-800 font-bold text-lg mb-3">Amount: ₱{Number(order.total_amount).toLocaleString()}</p>
+            <button
+              onClick={saveQRCode}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm"
+            >
+              <Download size={16} />
+              Save QR Code
+            </button>
           </div>
         </div>
 
@@ -225,12 +262,15 @@ function OrderConfirmationContent() {
               <span>Wait for our confirmation message</span>
             </li>
           </ol>
+          <p className="mt-4 text-sm text-green-700 bg-green-100 rounded-lg px-3 py-2">
+            We usually confirm payments within 1-2 hours during business hours (9 AM - 6 PM)
+          </p>
         </div>
 
         {/* Track Order Link */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-3 mb-6">
           <Link
-            href={`/track?orderNumber=${order.order_number}`}
+            href={`/track?orderNumber=${order.order_number}&phone=${order.phone_number}`}
             className="inline-block px-6 py-3 bg-[#82C3A3] text-white font-semibold rounded-xl hover:bg-[#6BAF8B] transition-colors"
           >
             Track Your Order
@@ -238,6 +278,20 @@ function OrderConfirmationContent() {
           <p className="text-sm text-gray-500">
             Or visit <Link href="/track" className="text-[#82C3A3] hover:underline">/track</Link> anytime
           </p>
+        </div>
+
+        {/* Instagram Follow Prompt */}
+        <div className="bg-gray-50 rounded-xl p-4 text-center">
+          <p className="text-gray-600 text-sm mb-3">Follow us for updates and new products!</p>
+          <a
+            href="https://www.instagram.com/bysistersandmom/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#833AB4] via-[#E1306C] to-[#F77737] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+          >
+            <Instagram size={18} />
+            Follow @bysistersandmom
+          </a>
         </div>
       </main>
     </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Package, Clock, CheckCircle, Truck, ArrowLeft } from 'lucide-react';
+import { Search, Package, Clock, CheckCircle, Truck, ArrowLeft, Copy, MessageCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import { supabase } from '@/lib/supabase';
 
@@ -53,6 +53,15 @@ function TrackOrderContent() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [showSearchForm, setShowSearchForm] = useState(true);
   const [autoFetched, setAutoFetched] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const copyOrderNumber = () => {
+    if (order) {
+      navigator.clipboard.writeText(order.order_number);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   // Auto-fetch order if both orderNumber and phone are in URL (from email link)
   useEffect(() => {
@@ -180,32 +189,40 @@ function TrackOrderContent() {
     <div className="min-h-screen bg-[#FFF8F5]">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <Link href="/" className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-800 mb-4">
-          <ArrowLeft size={18} />
-          <span>Back to home</span>
-        </Link>
-
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Track Your Order</h1>
+      <main className="container mx-auto px-4 py-4 max-w-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <Link href="/" className="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-100">
+            <ArrowLeft size={16} />
+          </Link>
+          <h1 className="text-xl font-bold text-gray-800">Track Your Order</h1>
+        </div>
 
         {/* Search Form - Collapsible */}
         {showSearchForm ? (
-          <form onSubmit={handleSearch} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
-            <div className="space-y-4">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
+            {/* Empty state illustration */}
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 mx-auto bg-[#82C3A3]/10 rounded-full flex items-center justify-center mb-3">
+                <Package className="text-[#82C3A3]" size={32} />
+              </div>
+              <p className="text-gray-600 text-sm">Enter your details to track your order</p>
+            </div>
+
+            <form onSubmit={handleSearch} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
                   Order Number
                 </label>
                 <input
                   type="text"
                   value={orderNumber}
                   onChange={(e) => setOrderNumber(e.target.value.toUpperCase())}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent uppercase"
-                  placeholder="e.g., JUA-X7K9M"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent uppercase text-center font-mono text-lg"
+                  placeholder="JOH-A1B2C3"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
                   Phone Number
                 </label>
                 <input
@@ -214,14 +231,14 @@ function TrackOrderContent() {
                   pattern="[0-9]*"
                   value={phone}
                   onChange={handlePhoneChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent"
-                  placeholder="e.g., 09171234567"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent text-center text-lg"
+                  placeholder="09XXXXXXXXX"
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-[#82C3A3] text-white font-semibold rounded-lg hover:bg-[#6BAF8B] transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-[#82C3A3] text-white font-semibold rounded-xl hover:bg-[#6BAF8B] transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <span>Searching...</span>
@@ -232,25 +249,55 @@ function TrackOrderContent() {
                   </>
                 )}
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         ) : order && (
-          <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#82C3A3]/20 rounded-full flex items-center justify-center">
-                <Package className="text-[#82C3A3]" size={20} />
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
+            {/* Horizontal Progress Bar */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Progress</span>
+                <span>{Math.round(((getStatusIndex(order) + 1) / STATUS_STEPS.length) * 100)}%</span>
               </div>
-              <div>
-                <p className="font-bold text-[#82C3A3]">{order.order_number}</p>
-                <p className="text-xs text-gray-500">{order.customer_name}</p>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#82C3A3] rounded-full transition-all duration-500"
+                  style={{ width: `${((getStatusIndex(order) + 1) / STATUS_STEPS.length) * 100}%` }}
+                />
               </div>
             </div>
-            <button
-              onClick={handleSearchAgain}
-              className="text-sm text-gray-500 hover:text-[#82C3A3] transition-colors"
-            >
-              Track different order
-            </button>
+
+            {/* Order info row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#82C3A3] rounded-full flex items-center justify-center">
+                  <Package className="text-white" size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-gray-800">{order.order_number}</p>
+                    <button
+                      onClick={copyOrderNumber}
+                      className="p-1 hover:bg-gray-100 rounded transition-colors"
+                      title="Copy order number"
+                    >
+                      {copied ? (
+                        <CheckCircle size={14} className="text-[#82C3A3]" />
+                      ) : (
+                        <Copy size={14} className="text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">{order.customer_name}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleSearchAgain}
+                className="text-xs text-gray-400 hover:text-[#82C3A3] transition-colors"
+              >
+                Change
+              </button>
+            </div>
           </div>
         )}
 
@@ -273,10 +320,10 @@ function TrackOrderContent() {
               </div>
             )}
 
-            {/* Status Timeline */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
-              <h2 className="font-semibold text-gray-800 mb-4">Order Status</h2>
-              <div className="space-y-4">
+            {/* Status Timeline - Compact */}
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
+              <h2 className="font-semibold text-gray-800 mb-3 text-sm">Status</h2>
+              <div className="space-y-0">
                 {STATUS_STEPS.map((step, index) => {
                   const currentIndex = getStatusIndex(order);
                   const isCompleted = index <= currentIndex;
@@ -284,30 +331,32 @@ function TrackOrderContent() {
                   const Icon = step.icon;
 
                   return (
-                    <div key={step.key} className="flex gap-4">
+                    <div key={step.key} className="flex gap-3">
                       <div className="flex flex-col items-center">
                         <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             isCompleted
                               ? 'bg-[#82C3A3] text-white'
-                              : 'bg-gray-200 text-gray-400'
-                          }`}
+                              : 'bg-gray-100 text-gray-400'
+                          } ${isCurrent ? 'ring-2 ring-[#82C3A3]/30' : ''}`}
                         >
-                          <Icon size={20} />
+                          <Icon size={16} />
                         </div>
                         {index < STATUS_STEPS.length - 1 && (
                           <div
-                            className={`w-0.5 h-8 ${
+                            className={`w-0.5 h-6 ${
                               index < currentIndex ? 'bg-[#82C3A3]' : 'bg-gray-200'
                             }`}
                           />
                         )}
                       </div>
-                      <div className={`flex-grow ${isCurrent ? 'opacity-100' : 'opacity-60'}`}>
-                        <p className={`font-medium ${isCompleted ? 'text-gray-800' : 'text-gray-500'}`}>
+                      <div className={`flex-grow pb-3 ${isCurrent ? '' : 'opacity-50'}`}>
+                        <p className={`text-sm font-medium ${isCompleted ? 'text-gray-800' : 'text-gray-500'}`}>
                           {step.label}
                         </p>
-                        <p className="text-sm text-gray-500">{step.description}</p>
+                        {isCurrent && (
+                          <p className="text-xs text-gray-400">{step.description}</p>
+                        )}
                       </div>
                     </div>
                   );
@@ -317,10 +366,10 @@ function TrackOrderContent() {
 
             {/* Order Info */}
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
+              <div className="flex justify-between items-start mb-4 gap-4">
+                <div className="flex-shrink-0">
                   <p className="text-sm text-gray-500">Order Number</p>
-                  <p className="text-xl font-bold text-[#82C3A3]">{order.order_number}</p>
+                  <p className="text-xl font-bold text-[#82C3A3] whitespace-nowrap">{order.order_number}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-500">Pickup Date</p>
@@ -358,6 +407,19 @@ function TrackOrderContent() {
                 </ul>
               </div>
             )}
+
+            {/* Help/Contact Link */}
+            <div className="text-center">
+              <a
+                href="https://ig.me/m/bysistersandmom"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-gray-500 hover:text-[#82C3A3] transition-colors text-sm"
+              >
+                <MessageCircle size={16} />
+                <span>Need help? DM us on Instagram</span>
+              </a>
+            </div>
           </>
         )}
 

@@ -18,7 +18,7 @@ export function proxy(request: NextRequest) {
   }
 
   // Protected routes that require authentication
-  const protectedRoutes = ['/orders', '/sales', '/production', '/menu'];
+  const protectedRoutes = ['/orders', '/sales', '/production'];
 
   // Check if current path is a protected route
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
@@ -54,7 +54,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - logo.jpg (logo file)
+     * - products (product images)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|logo.jpg|menu.png).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|logo.jpg|menu.png|products).*)',
   ],
 };

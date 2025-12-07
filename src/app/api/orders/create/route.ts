@@ -134,12 +134,15 @@ export async function POST(request: Request) {
     // Site URL for email links
     const siteUrl = 'https://sistersandmom.site';
 
+    // Extract first name for personalized greeting
+    const firstName = customerName.split(' ')[0];
+
     // Send confirmation email
     try {
       await resend.emails.send({
         from: 'Sisters & Mom Pastry <orders@sistersandmom.site>',
         to: email,
-        subject: `Order Confirmation - ${order.order_number}`,
+        subject: `Order Confirmed! ${order.order_number}`,
         html: `
           <!DOCTYPE html>
           <html>
@@ -147,73 +150,83 @@ export async function POST(request: Request) {
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
           </head>
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <img src="${siteUrl}/logo.jpg" alt="Sisters & Mom" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px;">
-              <h1 style="color: #82C3A3; margin-bottom: 5px;">Sisters & Mom</h1>
-              <p style="color: #666; margin: 0;">Order Confirmation</p>
-            </div>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FFF8F5;">
+            <div style="background-color: white; border-radius: 16px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
 
-            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-              <h2 style="color: #333; margin-top: 0;">Hi ${customerName}!</h2>
-              <p>Thank you for your order. Here are your order details:</p>
-
-              <div style="background-color: #82C3A3; color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
-                <p style="margin: 0; font-size: 14px;">Your Order Number</p>
-                <p style="margin: 5px 0 0 0; font-size: 28px; font-weight: bold; letter-spacing: 2px;">${order.order_number}</p>
+              <!-- Header -->
+              <div style="text-align: center; margin-bottom: 25px;">
+                <img src="${siteUrl}/logo.jpg" alt="Sisters & Mom" style="width: 70px; height: 70px; border-radius: 50%; margin-bottom: 12px;">
+                <h1 style="color: #82C3A3; margin: 0; font-size: 22px;">Thank you, ${firstName}!</h1>
+                <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Your order has been placed successfully</p>
               </div>
 
-              <h3 style="color: #333; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Order Summary</h3>
-              <pre style="font-family: Arial, sans-serif; white-space: pre-wrap; margin: 0;">${itemsList}</pre>
-              <p style="font-size: 18px; font-weight: bold; color: #82C3A3; margin-top: 15px;">Total: ₱${totalAmount.toLocaleString()}</p>
-
-              <h3 style="color: #333; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Pickup Details</h3>
-              <p><strong>Date:</strong> ${formattedPickupDate}</p>
-              ${orderNotes ? `<p><strong>Notes:</strong> ${orderNotes}</p>` : ''}
-            </div>
-
-            <div style="background-color: #FDF2F0; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #FADBD8;">
-              <h3 style="color: #8B5A2B; margin-top: 0;">Payment Instructions</h3>
-              <p style="color: #6B4423;">Please pay <strong>₱${totalAmount.toLocaleString()}</strong> using <strong>${paymentMethodName}</strong>:</p>
-
-              <div style="background-color: white; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
-                <img src="${siteUrl}/${paymentMethod}-qr.jpg" alt="${paymentMethodName} QR Code" style="max-width: 200px; border-radius: 8px; display: block; margin: 0 auto;">
+              <!-- Order Number Card -->
+              <div style="background: linear-gradient(135deg, #82C3A3 0%, #6BAF8B 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                <p style="margin: 0; font-size: 12px; opacity: 0.9;">ORDER NUMBER</p>
+                <p style="margin: 8px 0 0 0; font-size: 26px; font-weight: bold; letter-spacing: 2px;">${order.order_number}</p>
+                <p style="margin: 12px 0 0 0; font-size: 13px; opacity: 0.9;">Pickup: ${formattedPickupDate}</p>
               </div>
 
-              <p style="color: #6B4423; font-size: 14px; text-align: center;">If QR doesn't load: <a href="${siteUrl}/order/confirmation?orderNumber=${order.order_number}" style="color: #82C3A3; font-weight: bold;">View payment details on our website</a></p>
-            </div>
+              <!-- Order Summary -->
+              <div style="background-color: #f8f9fa; padding: 18px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #333; margin: 0 0 12px 0; font-size: 15px;">Order Summary</h3>
+                <div style="font-size: 14px; color: #555;">${itemsList.replace(/\n/g, '<br>')}</div>
+                <div style="border-top: 1px solid #e0e0e0; margin-top: 12px; padding-top: 12px;">
+                  <p style="font-size: 18px; font-weight: bold; color: #82C3A3; margin: 0;">Total: ₱${totalAmount.toLocaleString()}</p>
+                </div>
+                ${orderNotes ? `<p style="font-size: 13px; color: #666; margin: 10px 0 0 0;"><strong>Notes:</strong> ${orderNotes}</p>` : ''}
+              </div>
 
-            <div style="background-color: #E8F5EC; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #A9DFBF;">
-              <h3 style="color: #2D6A4F; margin-top: 0;">Next Steps</h3>
-              <ol style="color: #2D6A4F; padding-left: 20px;">
-                <li>Pay ₱${totalAmount.toLocaleString()} using ${paymentMethodName} (scan QR code above)</li>
-                <li>Take a screenshot of your payment receipt</li>
-                <li>Send the screenshot to our Instagram: <a href="https://ig.me/m/bysistersandmom" style="color: #1B4332; font-weight: bold;">@bysistersandmom</a></li>
-                <li>Include your order number: <strong>${order.order_number}</strong></li>
-                <li>Wait for our confirmation message</li>
-              </ol>
-            </div>
+              <!-- Payment Section -->
+              <div style="background-color: #FFF9E6; padding: 18px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #FFE082;">
+                <h3 style="color: #8B6914; margin: 0 0 12px 0; font-size: 15px;">Pay via ${paymentMethodName}</h3>
+                <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                  <img src="${siteUrl}/${paymentMethod}-qr.jpg" alt="${paymentMethodName} QR Code" style="max-width: 180px; border-radius: 8px;">
+                  <p style="color: #8B6914; font-weight: bold; font-size: 16px; margin: 12px 0 0 0;">₱${totalAmount.toLocaleString()}</p>
+                </div>
+                <p style="color: #8B6914; font-size: 12px; text-align: center; margin: 12px 0 0 0;">Can't scan? <a href="${siteUrl}/order/confirmation?orderNumber=${order.order_number}" style="color: #82C3A3; font-weight: bold;">View on website</a></p>
+              </div>
 
-            <div style="background-color: #E8F5EC; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #82C3A3;">
-              <h3 style="color: #1B4332; margin-top: 0;">Courier Booking (When Order is Ready)</h3>
-              <p style="color: #2D6A4F;">When you receive notification that your order is ready:</p>
-              <ul style="color: #2D6A4F; padding-left: 20px;">
-                <li><strong>Shop Address:</strong> Blk 13 Lot 14 Dahlia St. Pineda Subdivision, Dau, Mabalacat Pampanga, Philippines 2010</li>
-                <li><strong>Contact Number:</strong> 0917-815-8007</li>
-                <li><strong>Order Number:</strong> ${order.order_number}</li>
-              </ul>
-              <p style="color: #2D6A4F; font-size: 14px;">Book via Grab or Maxim and provide the order number to the courier.</p>
-            </div>
+              <!-- Next Steps -->
+              <div style="background-color: #E8F5EC; padding: 18px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #A9DFBF;">
+                <h3 style="color: #2D6A4F; margin: 0 0 12px 0; font-size: 15px;">What to do next</h3>
+                <ol style="color: #2D6A4F; padding-left: 18px; margin: 0; font-size: 14px;">
+                  <li style="margin-bottom: 8px;">Scan the QR code above to pay</li>
+                  <li style="margin-bottom: 8px;">Screenshot your payment receipt</li>
+                  <li style="margin-bottom: 8px;">Send it to our Instagram with your order number</li>
+                </ol>
+                <a href="https://ig.me/m/bysistersandmom" style="display: block; background: linear-gradient(135deg, #833AB4 0%, #E1306C 50%, #F77737 100%); color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; text-align: center; margin-top: 15px; font-size: 14px;">Message @bysistersandmom</a>
+                <p style="color: #2D6A4F; font-size: 12px; margin: 12px 0 0 0; text-align: center; background-color: #d4edda; padding: 8px; border-radius: 6px;">We usually confirm within 1-2 hours (9 AM - 6 PM)</p>
+              </div>
 
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
-              <p style="color: #666; font-size: 14px;">Track your order anytime:</p>
-              <a href="${siteUrl}/track?orderNumber=${order.order_number}&phone=${phone}" style="display: inline-block; background-color: #82C3A3; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;">Track Order</a>
-              <p style="color: #999; font-size: 12px; margin-top: 20px;">
-                Questions? DM us on Instagram <a href="https://www.instagram.com/bysistersandmom/" style="color: #82C3A3;">@bysistersandmom</a>
-              </p>
-              <p style="color: #ccc; font-size: 10px; margin-top: 15px;">
-                Website by <strong>DABCAS Digital Solutions</strong> • <a href="mailto:imdenisalimpolos@gmail.com" style="color: #82C3A3;">imdenisalimpolos@gmail.com</a>
-              </p>
+              <!-- Pickup Info (Collapsed) -->
+              <div style="background-color: #f0f0f0; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #555; margin: 0 0 8px 0; font-size: 14px;">When your order is ready</h3>
+                <p style="color: #666; font-size: 13px; margin: 0;">Book a courier (Grab/Maxim) to pickup from:</p>
+                <p style="color: #333; font-size: 13px; margin: 8px 0 0 0;"><strong>Blk 13 Lot 14 Dahlia St. Pineda Subdivision, Dau, Mabalacat Pampanga 2010</strong></p>
+                <p style="color: #666; font-size: 13px; margin: 5px 0 0 0;">Contact: 0917-815-8007</p>
+              </div>
+
+              <!-- Track Order Button -->
+              <div style="text-align: center; margin-bottom: 25px;">
+                <a href="${siteUrl}/track?orderNumber=${order.order_number}&phone=${phone}" style="display: inline-block; background-color: #82C3A3; color: white; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 15px;">Track Your Order</a>
+              </div>
+
+              <!-- Friendly Closing -->
+              <div style="text-align: center; padding: 20px; background-color: #FFF8F5; border-radius: 10px; margin-bottom: 20px;">
+                <p style="color: #666; font-size: 14px; margin: 0 0 10px 0;">We're excited to bake for you!</p>
+                <a href="https://www.instagram.com/bysistersandmom/" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #833AB4 0%, #E1306C 50%, #F77737 100%); color: white; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 500;">Follow @bysistersandmom</a>
+              </div>
+
+              <!-- Footer -->
+              <div style="text-align: center; padding-top: 15px; border-top: 1px solid #eee;">
+                <p style="color: #999; font-size: 11px; margin: 0;">
+                  Questions? DM us on <a href="https://www.instagram.com/bysistersandmom/" style="color: #82C3A3;">Instagram</a>
+                </p>
+                <p style="color: #ccc; font-size: 10px; margin: 10px 0 0 0;">
+                  Website by <strong>DABCAS Digital Solutions</strong>
+                </p>
+              </div>
             </div>
           </body>
           </html>
