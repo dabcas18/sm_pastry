@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, Satisfy } from "next/font/google";
+import { Outfit, DM_Serif_Display, Satisfy } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
+const dmSerif = DM_Serif_Display({ weight: "400", subsets: ["latin"], variable: "--font-serif" });
 const satisfy = Satisfy({ weight: "400", subsets: ["latin"], variable: "--font-script" });
 
 export const metadata: Metadata = {
@@ -92,7 +93,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${inter.className} ${satisfy.variable}`}>
+      <body className={`${outfit.variable} ${dmSerif.variable} ${satisfy.variable} font-sans`}>
         {children}
         <SpeedInsights />
       </body>

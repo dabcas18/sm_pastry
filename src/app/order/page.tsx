@@ -210,28 +210,28 @@ export default function CustomerOrderPage() {
       <main className="container mx-auto px-4 py-4 max-w-4xl">
         {step === 'products' ? (
           <>
-            {/* Title with back button */}
-            <div className="flex items-center gap-2 mb-3">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
               <Link
                 href="/"
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors shadow-sm"
+                className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={18} />
               </Link>
-              <h1 className="text-xl font-bold text-gray-800">Place Your Order</h1>
+              <h1 className="text-2xl font-bold text-brand-dark">Place Your Order</h1>
             </div>
 
             {/* Category Pills - Sticky */}
-            <div className="sticky top-0 z-10 bg-[#FFF8F5] pt-2 pb-4 -mx-4 px-4">
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="sticky top-16 md:top-20 z-10 bg-brand-bg pt-2 pb-3 -mx-4 px-4">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {categories.map(category => (
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`px-3 py-1.5 rounded-full whitespace-nowrap text-sm font-medium transition-all ${
+                    className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all duration-300 border ${
                       selectedCategory === category
-                        ? 'bg-[#E8A87C] text-white shadow-sm'
-                        : 'bg-white text-gray-600 border border-gray-200 hover:border-[#E8A87C] hover:text-[#E8A87C]'
+                        ? 'bg-[#E8A87C] text-white border-[#E8A87C] shadow-md shadow-orange-200/50'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
                     {category}
@@ -239,7 +239,7 @@ export default function CustomerOrderPage() {
                 ))}
               </div>
               {/* Selected Category Title */}
-              <h2 className="text-lg font-semibold text-gray-700 mt-2">{selectedCategory}</h2>
+              <h2 className="text-xl font-bold text-brand-dark mt-3">{selectedCategory}</h2>
             </div>
 
             {/* Product Cards - Responsive Grid */}
@@ -249,10 +249,10 @@ export default function CustomerOrderPage() {
                 return (
                   <div
                     key={product.id}
-                    className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-transform hover:scale-[1.02]"
+                    className="bg-brand-pink rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 hover:shadow-lg transition-all duration-300"
                   >
-                    {/* Product Image / Placeholder */}
-                    <div className="relative h-32 sm:h-40 lg:h-44 bg-gradient-to-br from-[#FFF8F5] to-[#FADBD8] flex items-center justify-center">
+                    {/* Product Image / Placeholder - Square */}
+                    <div className="relative aspect-square bg-[#FFE4E4] rounded-xl overflow-hidden flex items-center justify-center">
                       {product.image_url ? (
                         <Image
                           src={product.image_url}
@@ -262,47 +262,48 @@ export default function CustomerOrderPage() {
                         />
                       ) : (
                         <div className="flex flex-col items-center text-gray-300">
-                          <ImageIcon size={32} strokeWidth={1} className="sm:w-10 sm:h-10" />
-                          <span className="text-xs mt-1">No image</span>
+                          <ImageIcon size={28} strokeWidth={1} className="opacity-40" />
+                          <span className="text-xs mt-1 opacity-50">No image</span>
                         </div>
                       )}
                       {/* Quantity Badge */}
                       {cartItem && (
-                        <div className="absolute top-2 right-2 bg-[#82C3A3] text-white text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow">
+                        <div className="absolute top-1.5 right-1.5 bg-brand-green text-white text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-md">
                           {cartItem.quantity}
                         </div>
                       )}
                     </div>
 
                     {/* Product Info */}
-                    <div className="p-2 sm:p-3">
-                      <p className="font-medium text-gray-800 text-xs sm:text-sm leading-tight min-h-[2rem] sm:min-h-[2.5rem]">{product.name}</p>
-                      <p className="text-[#E8A87C] font-bold mt-1 text-right text-sm sm:text-base">₱{product.price.toLocaleString()}</p>
+                    <div className="flex flex-col flex-1">
+                      <p className="font-semibold text-gray-800 text-xs sm:text-sm leading-tight min-h-[2rem] sm:min-h-[2.25rem]">{product.name}</p>
 
-                      {/* Add / Quantity Controls */}
-                      <div className="mt-2 sm:mt-3">
+                      {/* Price and Add Button Row */}
+                      <div className="flex items-center justify-between mt-auto pt-1">
+                        <span className="text-[#E8A87C] font-bold text-sm sm:text-base">₱{product.price.toLocaleString()}</span>
+
                         {cartItem ? (
-                          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-1">
+                          <div className="flex items-center gap-1">
                             <button
                               onClick={() => updateQuantity(product.id, -1)}
-                              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-white shadow-sm hover:bg-gray-100 transition-colors"
+                              className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-gray-100 transition-colors"
                             >
-                              <Minus size={14} className="text-gray-600 sm:w-4 sm:h-4" />
+                              <Minus size={12} className="text-gray-600" />
                             </button>
-                            <span className="font-semibold text-gray-800 text-sm">{cartItem.quantity}</span>
+                            <span className="w-5 text-center font-semibold text-gray-800 text-xs sm:text-sm">{cartItem.quantity}</span>
                             <button
                               onClick={() => updateQuantity(product.id, 1)}
-                              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-[#82C3A3] text-white hover:bg-[#6BAF8B] transition-colors"
+                              className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full bg-brand-green text-white hover:bg-brand-green-dark transition-colors"
                             >
-                              <Plus size={14} className="sm:w-4 sm:h-4" />
+                              <Plus size={12} />
                             </button>
                           </div>
                         ) : (
                           <button
                             onClick={() => addToCart(product)}
-                            className="w-full py-1.5 sm:py-2 bg-[#82C3A3] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#6BAF8B] transition-colors flex items-center justify-center gap-1"
+                            className="px-3 sm:px-4 py-1.5 bg-brand-green text-white text-xs sm:text-sm font-semibold rounded-full hover:bg-brand-green-dark active:scale-95 transition-all shadow-sm flex items-center gap-1"
                           >
-                            <Plus size={14} className="sm:w-4 sm:h-4" />
+                            <Plus size={12} />
                             <span>Add</span>
                           </button>
                         )}
@@ -318,7 +319,7 @@ export default function CustomerOrderPage() {
               <div className="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto">
                 <button
                   onClick={() => setStep('details')}
-                  className="w-full py-4 bg-[#82C3A3] text-white font-semibold rounded-xl shadow-lg hover:bg-[#6BAF8B] transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-brand-green text-white font-bold rounded-full shadow-xl shadow-brand-green/30 hover:bg-brand-green-dark transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                 >
                   <ShoppingCart size={20} />
                   <span>View Cart ({getCartCount()}) - ₱{getCartTotal().toLocaleString()}</span>
@@ -528,7 +529,7 @@ export default function CustomerOrderPage() {
                 type="submit"
                 form="order-form"
                 disabled={loading || cart.length === 0}
-                className="w-full py-4 bg-[#82C3A3] text-white font-semibold rounded-xl shadow-lg hover:bg-[#6BAF8B] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full py-4 bg-brand-green text-white font-bold rounded-full shadow-xl shadow-brand-green/30 hover:bg-brand-green-dark transition-all active:scale-[0.98] disabled:bg-gray-400 disabled:shadow-none disabled:cursor-not-allowed"
               >
                 {loading ? 'Placing Order...' : `Place Order - ₱${getCartTotal().toLocaleString()}`}
               </button>
