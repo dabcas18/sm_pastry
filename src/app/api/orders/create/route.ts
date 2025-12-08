@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import webpush from 'web-push';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,6 +9,69 @@ const supabase = createClient(
 );
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Configure web-push with VAPID keys
+if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:orders@sistersandmom.site',
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
+
+// Function to send push notifications to all subscribers
+async function sendPushNotifications(orderNumber: string, customerName: string, totalAmount: number) {
+  try {
+    // Get all push subscriptions
+    const { data: subscriptions, error } = await supabase
+      .from('push_subscriptions')
+      .select('*');
+
+    if (error || !subscriptions || subscriptions.length === 0) {
+      console.log('No push subscriptions found');
+      return;
+    }
+
+    const payload = JSON.stringify({
+      title: `New Order: ${orderNumber}`,
+      body: `${customerName} placed an order for ₱${totalAmount.toLocaleString()}`,
+      icon: '/logo.jpg',
+      badge: '/logo.jpg',
+      url: '/orders',
+      tag: `order-${orderNumber}`
+    });
+
+    // Send to all subscriptions
+    await Promise.allSettled(
+      subscriptions.map(async (sub) => {
+        const pushSubscription = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth
+          }
+        };
+
+        try {
+          await webpush.sendNotification(pushSubscription, payload);
+        } catch (err: any) {
+          // If subscription is no longer valid, remove it
+          if (err.statusCode === 404 || err.statusCode === 410) {
+            await supabase
+              .from('push_subscriptions')
+              .delete()
+              .eq('endpoint', sub.endpoint);
+          }
+          console.error('Push notification error:', err.message);
+        }
+      })
+    );
+
+    console.log('Push notifications sent successfully');
+  } catch (error) {
+    console.error('Error sending push notifications:', error);
+  }
+}
 
 type OrderItem = {
   productId: string;
@@ -271,6 +335,14 @@ export async function POST(request: Request) {
     } catch (emailError) {
       console.error('Error sending email:', emailError);
       // Don't fail the order if email fails, just log it
+    }
+
+    // Send push notifications to admin devices
+    try {
+      await sendPushNotifications(order.order_number, customerName, totalAmount);
+    } catch (pushError) {
+      console.error('Error sending push notifications:', pushError);
+      // Don't fail the order if push fails, just log it
     }
 
     return NextResponse.json({

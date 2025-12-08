@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Sidebar from './Sidebar';
+import PWAInstallPrompt from './PWAInstallPrompt';
 import { Menu } from 'lucide-react';
 import Image from 'next/image';
 
@@ -47,6 +48,9 @@ export default function AppLayout({ children, title }: AppLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
     </div>
   );
 }
