@@ -115,12 +115,6 @@ export async function POST(request: Request) {
 
     const productMap = new Map(products?.map(p => [p.id, p.name]) || []);
 
-    // Format items for email
-    const itemsList = items.map(item => {
-      const productName = productMap.get(item.productId) || 'Unknown Product';
-      return `• ${productName} × ${item.quantity} = ₱${item.subtotal.toLocaleString()}`;
-    }).join('\n');
-
     // Format pickup date
     const formattedPickupDate = new Date(pickupDate).toLocaleDateString('en-PH', {
       weekday: 'long',
@@ -137,6 +131,12 @@ export async function POST(request: Request) {
     // Extract first name for personalized greeting
     const firstName = customerName.split(' ')[0];
 
+    // Format items for email - simpler format without bullet points
+    const itemsHtml = items.map(item => {
+      const productName = productMap.get(item.productId) || 'Unknown Product';
+      return `<tr><td style="padding:6px 0;color:#555;font-size:13px;">${productName} × ${item.quantity}</td><td style="padding:6px 0;text-align:right;font-weight:600;color:#333;font-size:13px;">₱${item.subtotal.toLocaleString()}</td></tr>`;
+    }).join('');
+
     // Send confirmation email
     try {
       await resend.emails.send({
@@ -144,92 +144,101 @@ export async function POST(request: Request) {
         to: email,
         subject: `Order Confirmed! ${order.order_number}`,
         html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FFF8F5;">
-            <div style="background-color: white; border-radius: 16px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#FFF8F5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;padding:16px;">
+    <tr><td>
+      <!-- Main Card -->
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;">
 
-              <!-- Header -->
-              <div style="text-align: center; margin-bottom: 25px;">
-                <img src="${siteUrl}/logo.jpg" alt="Sisters & Mom" style="width: 70px; height: 70px; border-radius: 50%; margin-bottom: 12px;">
-                <h1 style="color: #82C3A3; margin: 0; font-size: 22px;">Thank you, ${firstName}!</h1>
-                <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Your order has been placed successfully</p>
-              </div>
+        <!-- Header -->
+        <tr><td style="text-align:center;padding:24px 16px 16px;">
+          <img src="${siteUrl}/logo.jpg" alt="Sisters & Mom" width="60" height="60" style="border-radius:50%;display:block;margin:0 auto 12px;">
+          <h1 style="margin:0;font-size:20px;color:#82C3A3;">Thank you, ${firstName}!</h1>
+          <p style="margin:4px 0 0;font-size:13px;color:#888;">Your order has been placed</p>
+        </td></tr>
 
-              <!-- Order Number Card -->
-              <div style="background: linear-gradient(135deg, #82C3A3 0%, #6BAF8B 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
-                <p style="margin: 0; font-size: 12px; opacity: 0.9;">ORDER NUMBER</p>
-                <p style="margin: 8px 0 0 0; font-size: 26px; font-weight: bold; letter-spacing: 2px;">${order.order_number}</p>
-                <p style="margin: 12px 0 0 0; font-size: 13px; opacity: 0.9;">Pickup: ${formattedPickupDate}</p>
-              </div>
+        <!-- Order Number Banner -->
+        <tr><td style="padding:0 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#82C3A3;border-radius:12px;">
+            <tr><td style="padding:16px;text-align:center;">
+              <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:1px;">Order Number</p>
+              <p style="margin:6px 0;font-size:22px;font-weight:bold;color:#fff;letter-spacing:2px;">${order.order_number}</p>
+              <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.9);">Pickup: ${formattedPickupDate}</p>
+            </td></tr>
+          </table>
+        </td></tr>
 
-              <!-- Order Summary -->
-              <div style="background-color: #f8f9fa; padding: 18px; border-radius: 10px; margin-bottom: 20px;">
-                <h3 style="color: #333; margin: 0 0 12px 0; font-size: 15px;">Order Summary</h3>
-                <div style="font-size: 14px; color: #555;">${itemsList.replace(/\n/g, '<br>')}</div>
-                <div style="border-top: 1px solid #e0e0e0; margin-top: 12px; padding-top: 12px;">
-                  <p style="font-size: 18px; font-weight: bold; color: #82C3A3; margin: 0;">Total: ₱${totalAmount.toLocaleString()}</p>
-                </div>
-                ${orderNotes ? `<p style="font-size: 13px; color: #666; margin: 10px 0 0 0;"><strong>Notes:</strong> ${orderNotes}</p>` : ''}
-              </div>
+        <!-- Order Summary -->
+        <tr><td style="padding:16px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa;border-radius:10px;padding:14px;">
+            <tr><td>
+              <p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#333;">Order Summary</p>
+              <table width="100%" cellpadding="0" cellspacing="0">${itemsHtml}</table>
+              <div style="border-top:1px dashed #ddd;margin:10px 0;"></div>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="font-size:15px;font-weight:bold;color:#333;">Total</td>
+                  <td style="text-align:right;font-size:16px;font-weight:bold;color:#82C3A3;">₱${totalAmount.toLocaleString()}</td>
+                </tr>
+              </table>
+              ${orderNotes ? `<p style="margin:10px 0 0;font-size:12px;color:#666;"><b>Notes:</b> ${orderNotes}</p>` : ''}
+            </td></tr>
+          </table>
+        </td></tr>
 
-              <!-- Payment Section -->
-              <div style="background-color: #FFF9E6; padding: 18px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #FFE082;">
-                <h3 style="color: #8B6914; margin: 0 0 12px 0; font-size: 15px;">Pay via ${paymentMethodName}</h3>
-                <div style="background-color: white; padding: 15px; border-radius: 8px; text-align: center;">
-                  <img src="${siteUrl}/${paymentMethod}-qr.jpg" alt="${paymentMethodName} QR Code" style="max-width: 180px; border-radius: 8px;">
-                  <p style="color: #8B6914; font-weight: bold; font-size: 16px; margin: 12px 0 0 0;">₱${totalAmount.toLocaleString()}</p>
-                </div>
-                <p style="color: #8B6914; font-size: 12px; text-align: center; margin: 12px 0 0 0;">Can't scan? <a href="${siteUrl}/order/confirmation?orderNumber=${order.order_number}" style="color: #82C3A3; font-weight: bold;">View on website</a></p>
-              </div>
+        <!-- Payment QR -->
+        <tr><td style="padding:0 16px 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:${paymentMethod === 'gcash' ? '#EBF5FF' : '#FFF8E1'};border:1px solid ${paymentMethod === 'gcash' ? '#90CAF9' : '#FFE082'};border-radius:10px;">
+            <tr><td style="padding:14px;text-align:center;">
+              <p style="margin:0 0 10px;font-size:14px;font-weight:600;color:${paymentMethod === 'gcash' ? '#007DFE' : '#F26522'};">Pay via ${paymentMethodName}</p>
+              <table cellpadding="0" cellspacing="0" style="margin:0 auto;background:#fff;border-radius:8px;padding:10px;">
+                <tr><td>
+                  <img src="${siteUrl}/${paymentMethod}-qr.jpg" alt="QR Code" width="150" height="150" style="display:block;border-radius:6px;">
+                </td></tr>
+              </table>
+              <p style="margin:10px 0 0;font-size:16px;font-weight:bold;color:${paymentMethod === 'gcash' ? '#007DFE' : '#F26522'};">₱${totalAmount.toLocaleString()}</p>
+              <p style="margin:8px 0 0;font-size:11px;color:#888;">Can't scan? <a href="${siteUrl}/order/confirmation?orderNumber=${order.order_number}" style="color:#82C3A3;font-weight:600;">View on website</a></p>
+            </td></tr>
+          </table>
+        </td></tr>
 
-              <!-- Next Steps -->
-              <div style="background-color: #E8F5EC; padding: 18px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #A9DFBF;">
-                <h3 style="color: #2D6A4F; margin: 0 0 12px 0; font-size: 15px;">What to do next</h3>
-                <ol style="color: #2D6A4F; padding-left: 18px; margin: 0; font-size: 14px;">
-                  <li style="margin-bottom: 8px;">Scan the QR code above to pay</li>
-                  <li style="margin-bottom: 8px;">Screenshot your payment receipt</li>
-                  <li style="margin-bottom: 8px;">Send it to our Instagram with your order number</li>
-                </ol>
-                <a href="https://ig.me/m/bysistersandmom" style="display: block; background: linear-gradient(135deg, #833AB4 0%, #E1306C 50%, #F77737 100%); color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; text-align: center; margin-top: 15px; font-size: 14px;">Message @bysistersandmom</a>
-                <p style="color: #2D6A4F; font-size: 12px; margin: 12px 0 0 0; text-align: center; background-color: #d4edda; padding: 8px; border-radius: 6px;">We usually confirm within 1-2 hours (9 AM - 6 PM)</p>
-              </div>
+        <!-- Next Steps -->
+        <tr><td style="padding:0 16px 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#E8F5EC;border:1px solid #A9DFBF;border-radius:10px;">
+            <tr><td style="padding:14px;">
+              <p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#2D6A4F;">What to do next</p>
+              <p style="margin:0 0 6px;font-size:13px;color:#2D6A4F;">1. Scan the QR code to pay</p>
+              <p style="margin:0 0 6px;font-size:13px;color:#2D6A4F;">2. Screenshot your receipt</p>
+              <p style="margin:0 0 12px;font-size:13px;color:#2D6A4F;">3. Send it to our Instagram</p>
+              <a href="https://ig.me/m/bysistersandmom" style="display:block;background:linear-gradient(135deg,#833AB4,#E1306C,#F77737);color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-weight:600;text-align:center;font-size:13px;">Message @bysistersandmom</a>
+              <p style="margin:10px 0 0;font-size:11px;color:#2D6A4F;text-align:center;background:#d4edda;padding:6px;border-radius:6px;">We confirm within 1-2 hours (9AM-6PM)</p>
+            </td></tr>
+          </table>
+        </td></tr>
 
-              <!-- Pickup Info (Collapsed) -->
-              <div style="background-color: #f0f0f0; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                <h3 style="color: #555; margin: 0 0 8px 0; font-size: 14px;">When your order is ready</h3>
-                <p style="color: #666; font-size: 13px; margin: 0;">Book a courier (Grab/Maxim) to pickup from:</p>
-                <p style="color: #333; font-size: 13px; margin: 8px 0 0 0;"><strong>Blk 13 Lot 14 Dahlia St. Pineda Subdivision, Dau, Mabalacat Pampanga 2010</strong></p>
-                <p style="color: #666; font-size: 13px; margin: 5px 0 0 0;">Contact: 0917-815-8007</p>
-              </div>
+        <!-- Track Button -->
+        <tr><td style="padding:0 16px 16px;text-align:center;">
+          <a href="${siteUrl}/track?orderNumber=${order.order_number}&phone=${phone}" style="display:inline-block;background:#82C3A3;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:14px;">Track Your Order</a>
+        </td></tr>
 
-              <!-- Track Order Button -->
-              <div style="text-align: center; margin-bottom: 25px;">
-                <a href="${siteUrl}/track?orderNumber=${order.order_number}&phone=${phone}" style="display: inline-block; background-color: #82C3A3; color: white; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 15px;">Track Your Order</a>
-              </div>
+        <!-- Footer -->
+        <tr><td style="padding:16px;text-align:center;background:#FFF8F5;border-top:1px solid #f0f0f0;">
+          <p style="margin:0 0 8px;font-size:12px;color:#888;">Follow us for updates!</p>
+          <a href="https://www.instagram.com/bysistersandmom/" style="display:inline-block;background:linear-gradient(135deg,#833AB4,#E1306C,#F77737);color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:500;">@bysistersandmom</a>
+          <p style="margin:12px 0 0;font-size:10px;color:#ccc;">Website by DABCAS Digital Solutions</p>
+        </td></tr>
 
-              <!-- Friendly Closing -->
-              <div style="text-align: center; padding: 20px; background-color: #FFF8F5; border-radius: 10px; margin-bottom: 20px;">
-                <p style="color: #666; font-size: 14px; margin: 0 0 10px 0;">We're excited to bake for you!</p>
-                <a href="https://www.instagram.com/bysistersandmom/" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #833AB4 0%, #E1306C 50%, #F77737 100%); color: white; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 500;">Follow @bysistersandmom</a>
-              </div>
-
-              <!-- Footer -->
-              <div style="text-align: center; padding-top: 15px; border-top: 1px solid #eee;">
-                <p style="color: #999; font-size: 11px; margin: 0;">
-                  Questions? DM us on <a href="https://www.instagram.com/bysistersandmom/" style="color: #82C3A3;">Instagram</a>
-                </p>
-                <p style="color: #ccc; font-size: 10px; margin: 10px 0 0 0;">
-                  Website by <strong>DABCAS Digital Solutions</strong>
-                </p>
-              </div>
-            </div>
-          </body>
-          </html>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
         `
       });
     } catch (emailError) {

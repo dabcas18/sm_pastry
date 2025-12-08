@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle, Copy, Check, ExternalLink, Instagram, Download, Calendar } from 'lucide-react';
+import { Check, Copy, ExternalLink, Instagram, Download, Calendar, Clock } from 'lucide-react';
 import Header from '@/components/Header';
 import { supabase } from '@/lib/supabase';
 
@@ -116,9 +116,9 @@ function OrderConfirmationContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FFF8F5] flex items-center justify-center">
+      <div className="min-h-screen bg-brand-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#82C3A3] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
           <p className="text-gray-600">Loading order details...</p>
         </div>
       </div>
@@ -127,10 +127,10 @@ function OrderConfirmationContent() {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-[#FFF8F5] flex items-center justify-center">
+      <div className="min-h-screen bg-brand-bg flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Order not found</p>
-          <Link href="/order" className="text-[#82C3A3] font-medium hover:underline">
+          <Link href="/order" className="text-brand-green font-medium hover:underline">
             Place a new order
           </Link>
         </div>
@@ -140,156 +140,161 @@ function OrderConfirmationContent() {
 
   const qrImage = order.payment_method === 'gcash' ? '/gcash-qr.jpg' : '/maribank-qr.jpg';
   const paymentMethodName = order.payment_method === 'gcash' ? 'GCash' : 'MariBank';
+  const paymentColor = order.payment_method === 'gcash' ? '#007DFE' : '#F26522';
 
   return (
-    <div className="min-h-screen bg-[#FFF8F5]">
+    <div className="min-h-screen bg-brand-bg">
       <Header />
 
-      <main className="container mx-auto px-4 py-6 max-w-2xl">
-        {/* Success Message - Personalized */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-            <CheckCircle className="w-10 h-10 text-green-500" />
+      <main className="container mx-auto px-4 py-6 max-w-2xl space-y-4 animate-fade-in">
+        {/* Success Header */}
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto shadow-sm border-4 border-white">
+            <Check className="w-8 h-8 text-brand-green" strokeWidth={3} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Thank you, {order.customer_name.split(' ')[0]}!</h1>
-          <p className="text-gray-600">Your order has been placed successfully</p>
-          <p className="text-sm text-gray-500 mt-1">Confirmation sent to {order.email}</p>
+          <h1 className="text-2xl font-bold text-brand-dark">Thank you, {order.customer_name.split(' ')[0]}!</h1>
+          <p className="text-gray-500 text-sm">
+            Your order has been placed successfully<br />
+            <span className="text-xs">Confirmation sent to {order.email}</span>
+          </p>
         </div>
 
-        {/* Order Number + Pickup Date Card */}
-        <div className="bg-[#82C3A3] text-white rounded-xl p-5 mb-6">
-          <div className="flex justify-between items-start">
+        {/* Order Card */}
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+          {/* Green Header */}
+          <div className="bg-brand-green p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <p className="text-xs opacity-80 mb-1">Order Number</p>
+              <p className="text-white/80 text-xs font-medium uppercase tracking-wider">Order Number</p>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold tracking-wider">{order.order_number}</span>
-                <button
-                  onClick={copyOrderNumber}
-                  className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
-                  title="Copy order number"
-                >
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                <h2 className="text-xl font-bold text-white tracking-wide">{order.order_number}</h2>
+                <button onClick={copyOrderNumber} className="text-white/70 hover:text-white transition-colors">
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-xs opacity-80 mb-1">Pickup Date</p>
-              <div className="flex items-center gap-2 justify-end">
-                <Calendar size={16} className="opacity-80" />
-                <span className="font-semibold">{formatDate(order.pickup_date)}</span>
+            <div className="text-white sm:text-right">
+              <p className="text-white/80 text-xs font-medium uppercase tracking-wider">Pickup Date</p>
+              <div className="flex items-center gap-1.5 text-white font-medium text-sm">
+                <Calendar className="w-4 h-4" />
+                <span>{formatDate(order.pickup_date)}</span>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Order Summary */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
-          <h2 className="font-semibold text-gray-800 mb-3">Order Summary</h2>
-          <div className="space-y-2">
-            {orderItems.map(item => (
-              <div key={item.id} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
-                <div>
-                  <p className="font-medium text-gray-800">{item.product?.name || 'Product'}</p>
-                  <p className="text-sm text-gray-500">₱{Number(item.unit_price).toLocaleString()} × {item.quantity}</p>
+          {/* Order Summary */}
+          <div className="p-4">
+            <h3 className="font-bold text-brand-dark mb-3">Order Summary</h3>
+            <div className="space-y-2">
+              {orderItems.map(item => (
+                <div key={item.id} className="flex justify-between items-start py-1.5 border-b border-dashed border-gray-100 last:border-0">
+                  <div>
+                    <p className="font-medium text-gray-700 text-sm">{item.product?.name || 'Product'}</p>
+                    <p className="text-xs text-gray-400">₱{Number(item.unit_price).toLocaleString()} × {item.quantity}</p>
+                  </div>
+                  <p className="font-bold text-brand-dark text-sm">₱{Number(item.subtotal).toLocaleString()}</p>
                 </div>
-                <p className="font-semibold text-gray-800">₱{Number(item.subtotal).toLocaleString()}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
-            <span className="text-lg font-bold text-gray-800">Total</span>
-            <span className="text-lg font-bold text-[#82C3A3]">₱{Number(order.total_amount).toLocaleString()}</span>
-          </div>
-          {order.order_notes && (
-            <div className="mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600">
-              <p><strong>Notes:</strong> {order.order_notes}</p>
+              ))}
             </div>
-          )}
+            <div className="border-t border-gray-100 mt-3 pt-3 flex justify-between items-center">
+              <h3 className="font-bold text-brand-dark">Total</h3>
+              <h3 className="font-bold text-brand-green text-lg">₱{Number(order.total_amount).toLocaleString()}</h3>
+            </div>
+            {order.order_notes && (
+              <p className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-100">
+                <strong>Notes:</strong> {order.order_notes}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Payment QR Code */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-          <h2 className="font-semibold text-amber-800 mb-3">Payment via {paymentMethodName}</h2>
-          <div className="flex flex-col items-center">
+        {/* Payment Section */}
+        <div
+          className="rounded-2xl p-4 text-center relative overflow-hidden"
+          style={{ backgroundColor: order.payment_method === 'gcash' ? '#EBF5FF' : '#FFF8E1', borderColor: order.payment_method === 'gcash' ? '#90CAF9' : '#FFE082', borderWidth: '1px' }}
+        >
+          <h3 className="font-bold mb-3" style={{ color: paymentColor }}>Payment via {paymentMethodName}</h3>
+          <div className="bg-white p-3 rounded-xl shadow-sm inline-block mb-3">
             <Image
               src={qrImage}
               alt={`${paymentMethodName} QR Code`}
-              width={220}
-              height={220}
-              className="rounded-lg mb-3"
+              width={180}
+              height={180}
+              className="rounded-lg"
             />
-            <p className="text-amber-800 font-bold text-lg mb-3">Amount: ₱{Number(order.total_amount).toLocaleString()}</p>
-            <button
-              onClick={saveQRCode}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm"
-            >
-              <Download size={16} />
-              Save QR Code
-            </button>
           </div>
+          <p className="font-bold text-xl mb-3" style={{ color: paymentColor }}>₱{Number(order.total_amount).toLocaleString()}</p>
+          <button
+            onClick={saveQRCode}
+            className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl font-semibold text-sm shadow-lg mx-auto transition-all hover:opacity-90 active:scale-95"
+            style={{ backgroundColor: paymentColor }}
+          >
+            <Download size={16} />
+            Save QR Code
+          </button>
         </div>
 
         {/* Next Steps */}
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-          <h2 className="font-semibold text-green-800 mb-3">Next Steps</h2>
-          <ol className="space-y-3 text-green-800">
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-green-200 rounded-full flex items-center justify-center text-sm font-bold">1</span>
-              <span>Pay using the QR code above</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-green-200 rounded-full flex items-center justify-center text-sm font-bold">2</span>
-              <span>Take a screenshot of your payment receipt</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-green-200 rounded-full flex items-center justify-center text-sm font-bold">3</span>
-              <div>
-                <span>Send screenshot + order number to our Instagram</span>
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+          <h3 className="font-bold text-green-800 mb-3">Next Steps</h3>
+          <div className="space-y-3">
+            <div className="flex gap-3 items-start">
+              <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
+              <p className="text-green-800 text-sm">Pay using the QR code above</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</div>
+              <p className="text-green-800 text-sm">Screenshot your payment receipt</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</div>
+              <div className="space-y-2">
+                <p className="text-green-800 text-sm">Send screenshot + order number to Instagram</p>
                 <a
                   href="https://ig.me/m/bysistersandmom"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all w-fit"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-semibold shadow-md hover:opacity-90 transition-opacity"
                 >
-                  <Instagram size={18} />
-                  <span>Message @bysistersandmom</span>
-                  <ExternalLink size={14} />
+                  <Instagram className="w-4 h-4" />
+                  Message @bysistersandmom
+                  <ExternalLink className="w-3 h-3 opacity-70" />
                 </a>
               </div>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-green-200 rounded-full flex items-center justify-center text-sm font-bold">4</span>
-              <span>Wait for our confirmation message</span>
-            </li>
-          </ol>
-          <p className="mt-4 text-sm text-green-700 bg-green-100 rounded-lg px-3 py-2">
-            We usually confirm payments within 1-2 hours during business hours (9 AM - 6 PM)
-          </p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">4</div>
+              <p className="text-green-800 text-sm">Wait for our confirmation message</p>
+            </div>
+          </div>
+          <div className="mt-4 bg-green-100/50 rounded-lg p-2.5 text-green-700 text-xs font-medium text-center flex items-center justify-center gap-2">
+            <Clock className="w-3.5 h-3.5" />
+            We usually confirm within 1-2 hours (9 AM - 6 PM)
+          </div>
         </div>
 
-        {/* Track Order Link */}
-        <div className="text-center space-y-3 mb-6">
+        {/* Footer Actions */}
+        <div className="text-center space-y-3 pt-2">
           <Link
             href={`/track?orderNumber=${order.order_number}&phone=${order.phone_number}`}
-            className="inline-block px-6 py-3 bg-[#82C3A3] text-white font-semibold rounded-xl hover:bg-[#6BAF8B] transition-colors"
+            className="inline-block px-10 py-3.5 bg-brand-green text-white font-bold rounded-xl shadow-xl shadow-brand-green/20 hover:bg-brand-green-dark transition-all hover:-translate-y-0.5"
           >
             Track Your Order
           </Link>
-          <p className="text-sm text-gray-500">
-            Or visit <Link href="/track" className="text-[#82C3A3] hover:underline">/track</Link> anytime
+          <p className="text-gray-400 text-sm">
+            Or visit <Link href="/track" className="text-brand-green hover:underline">/track</Link> anytime
           </p>
         </div>
 
-        {/* Instagram Follow Prompt */}
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
+        {/* Social Promo */}
+        <div className="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-50">
           <p className="text-gray-600 text-sm mb-3">Follow us for updates and new products!</p>
           <a
             href="https://www.instagram.com/bysistersandmom/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#833AB4] via-[#E1306C] to-[#F77737] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-orange-500 text-white rounded-lg text-sm font-semibold shadow-md hover:opacity-90 transition-opacity"
           >
-            <Instagram size={18} />
+            <Instagram className="w-4 h-4" />
             Follow @bysistersandmom
           </a>
         </div>

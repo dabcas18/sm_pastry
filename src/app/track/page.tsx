@@ -186,43 +186,44 @@ function TrackOrderContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF8F5]">
+    <div className="min-h-screen bg-brand-bg">
       <Header />
 
       <main className="container mx-auto px-4 py-4 max-w-2xl">
+        {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <Link href="/" className="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-100">
-            <ArrowLeft size={16} />
+          <Link href="/" className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+            <ArrowLeft size={18} />
           </Link>
-          <h1 className="text-xl font-bold text-gray-800">Track Your Order</h1>
+          <h1 className="text-2xl font-bold text-brand-dark">Track Your Order</h1>
         </div>
 
         {/* Search Form - Collapsible */}
         {showSearchForm ? (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-4 animate-fade-in">
             {/* Empty state illustration */}
-            <div className="text-center mb-4">
-              <div className="w-16 h-16 mx-auto bg-[#82C3A3]/10 rounded-full flex items-center justify-center mb-3">
-                <Package className="text-[#82C3A3]" size={32} />
+            <div className="text-center mb-5">
+              <div className="w-14 h-14 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-3">
+                <Package className="text-brand-green" size={28} />
               </div>
-              <p className="text-gray-600 text-sm">Enter your details to track your order</p>
+              <p className="text-gray-500 font-medium text-sm">Enter your details to track your order</p>
             </div>
 
-            <form onSubmit={handleSearch} className="space-y-3">
+            <form onSubmit={handleSearch} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">
+                <label className="block text-sm font-semibold text-gray-500 mb-1.5 ml-1">
                   Order Number
                 </label>
                 <input
                   type="text"
                   value={orderNumber}
                   onChange={(e) => setOrderNumber(e.target.value.toUpperCase())}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent uppercase text-center font-mono text-lg"
+                  className="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-green/50 uppercase text-center font-medium text-gray-700 tracking-wide placeholder-gray-300"
                   placeholder="JOH-A1B2C3"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">
+                <label className="block text-sm font-semibold text-gray-500 mb-1.5 ml-1">
                   Phone Number
                 </label>
                 <input
@@ -231,14 +232,14 @@ function TrackOrderContent() {
                   pattern="[0-9]*"
                   value={phone}
                   onChange={handlePhoneChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent text-center text-lg"
+                  className="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-green/50 text-center font-medium text-gray-700 tracking-wide placeholder-gray-300"
                   placeholder="09XXXXXXXXX"
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-[#82C3A3] text-white font-semibold rounded-xl hover:bg-[#6BAF8B] transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-brand-green text-white font-bold rounded-xl hover:bg-brand-green-dark transition-all disabled:bg-gray-400 flex items-center justify-center gap-2 shadow-lg shadow-brand-green/20 active:scale-[0.98] mt-2"
               >
                 {loading ? (
                   <span>Searching...</span>
@@ -252,16 +253,16 @@ function TrackOrderContent() {
             </form>
           </div>
         ) : order && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-50 mb-4">
             {/* Horizontal Progress Bar */}
             <div className="mb-4">
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
+              <div className="flex justify-between text-sm text-gray-500 mb-1.5">
                 <span>Progress</span>
-                <span>{Math.round(((getStatusIndex(order) + 1) / STATUS_STEPS.length) * 100)}%</span>
+                <span className="font-bold text-brand-dark">{Math.round(((getStatusIndex(order) + 1) / STATUS_STEPS.length) * 100)}%</span>
               </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#82C3A3] rounded-full transition-all duration-500"
+                  className="h-full bg-brand-green rounded-full transition-all duration-1000 ease-out"
                   style={{ width: `${((getStatusIndex(order) + 1) / STATUS_STEPS.length) * 100}%` }}
                 />
               </div>
@@ -270,30 +271,30 @@ function TrackOrderContent() {
             {/* Order info row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#82C3A3] rounded-full flex items-center justify-center">
+                <div className="w-11 h-11 bg-brand-green rounded-full flex items-center justify-center shadow-md">
                   <Package className="text-white" size={20} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="font-bold text-gray-800">{order.order_number}</p>
+                    <p className="font-bold text-lg text-brand-dark tracking-wide">{order.order_number}</p>
                     <button
                       onClick={copyOrderNumber}
                       className="p-1 hover:bg-gray-100 rounded transition-colors"
                       title="Copy order number"
                     >
                       {copied ? (
-                        <CheckCircle size={14} className="text-[#82C3A3]" />
+                        <CheckCircle size={14} className="text-brand-green" />
                       ) : (
                         <Copy size={14} className="text-gray-400" />
                       )}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500">{order.customer_name}</p>
+                  <p className="text-sm text-gray-500">{order.customer_name}</p>
                 </div>
               </div>
               <button
                 onClick={handleSearchAgain}
-                className="text-xs text-gray-400 hover:text-[#82C3A3] transition-colors"
+                className="text-sm text-gray-400 hover:text-brand-dark font-medium underline-offset-4 hover:underline transition-colors"
               >
                 Change
               </button>
@@ -320,78 +321,75 @@ function TrackOrderContent() {
               </div>
             )}
 
-            {/* Status Timeline - Compact */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
-              <h2 className="font-semibold text-gray-800 mb-3 text-sm">Status</h2>
-              <div className="space-y-0">
-                {STATUS_STEPS.map((step, index) => {
-                  const currentIndex = getStatusIndex(order);
-                  const isCompleted = index <= currentIndex;
-                  const isCurrent = index === currentIndex;
-                  const Icon = step.icon;
+            {/* Status Timeline */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-50 mb-4">
+              <h2 className="font-bold text-brand-dark mb-5">Status</h2>
+              <div className="relative">
+                {/* Vertical Line */}
+                <div className="absolute left-[17px] top-4 bottom-4 w-0.5 bg-gray-100"></div>
 
-                  return (
-                    <div key={step.key} className="flex gap-3">
-                      <div className="flex flex-col items-center">
+                {/* Steps */}
+                <div className="space-y-5 relative z-10">
+                  {STATUS_STEPS.map((step, index) => {
+                    const currentIndex = getStatusIndex(order);
+                    const isCompleted = index <= currentIndex;
+                    const isCurrent = index === currentIndex;
+                    const Icon = step.icon;
+
+                    return (
+                      <div key={step.key} className="flex gap-4">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-4 border-white shadow-sm ${
                             isCompleted
-                              ? 'bg-[#82C3A3] text-white'
-                              : 'bg-gray-100 text-gray-400'
-                          } ${isCurrent ? 'ring-2 ring-[#82C3A3]/30' : ''}`}
+                              ? 'bg-green-50 text-brand-green'
+                              : 'bg-gray-50 text-gray-300'
+                          }`}
                         >
                           <Icon size={16} />
                         </div>
-                        {index < STATUS_STEPS.length - 1 && (
-                          <div
-                            className={`w-0.5 h-6 ${
-                              index < currentIndex ? 'bg-[#82C3A3]' : 'bg-gray-200'
-                            }`}
-                          />
-                        )}
+                        <div className={`${isCurrent ? '' : 'opacity-40'}`}>
+                          <p className={`font-bold ${isCompleted ? 'text-brand-dark' : 'text-gray-500'}`}>
+                            {step.label}
+                          </p>
+                          {isCurrent && (
+                            <p className="text-sm text-gray-400 mt-0.5">{step.description}</p>
+                          )}
+                        </div>
                       </div>
-                      <div className={`flex-grow pb-3 ${isCurrent ? '' : 'opacity-50'}`}>
-                        <p className={`text-sm font-medium ${isCompleted ? 'text-gray-800' : 'text-gray-500'}`}>
-                          {step.label}
-                        </p>
-                        {isCurrent && (
-                          <p className="text-xs text-gray-400">{step.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
             {/* Order Info */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
-              <div className="flex justify-between items-start mb-4 gap-4">
-                <div className="flex-shrink-0">
-                  <p className="text-sm text-gray-500">Order Number</p>
-                  <p className="text-xl font-bold text-[#82C3A3] whitespace-nowrap">{order.order_number}</p>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-50 mb-4">
+              <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Order Number</p>
+                  <p className="text-lg font-bold text-brand-green">{order.order_number}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-500">Pickup Date</p>
-                  <p className="font-medium text-gray-800">{formatDate(order.pickup_date)}</p>
+                  <p className="text-sm text-gray-500 mb-1">Pickup Date</p>
+                  <p className="font-bold text-brand-dark">{formatDate(order.pickup_date)}</p>
                 </div>
               </div>
 
-              <h3 className="font-semibold text-gray-800 mb-2">Order Items</h3>
+              <h3 className="font-bold text-brand-dark mb-3">Order Items</h3>
               <div className="space-y-2">
                 {orderItems.map(item => (
-                  <div key={item.id} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
+                  <div key={item.id} className="flex justify-between items-start py-1.5">
                     <div>
-                      <p className="font-medium text-gray-800">{item.product?.name || 'Product'}</p>
-                      <p className="text-sm text-gray-500">₱{Number(item.unit_price).toLocaleString()} × {item.quantity}</p>
+                      <p className="font-medium text-gray-700 text-sm">{item.product?.name || 'Product'}</p>
+                      <p className="text-xs text-gray-400">₱{Number(item.unit_price).toLocaleString()} × {item.quantity}</p>
                     </div>
-                    <p className="font-semibold text-gray-800">₱{Number(item.subtotal).toLocaleString()}</p>
+                    <p className="font-bold text-brand-dark text-sm">₱{Number(item.subtotal).toLocaleString()}</p>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
-                <span className="text-lg font-bold text-gray-800">Total</span>
-                <span className="text-lg font-bold text-[#82C3A3]">₱{Number(order.total_amount).toLocaleString()}</span>
+              <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+                <span className="font-bold text-brand-dark">Total</span>
+                <span className="font-bold text-brand-green text-lg">₱{Number(order.total_amount).toLocaleString()}</span>
               </div>
             </div>
 

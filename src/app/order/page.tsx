@@ -331,124 +331,123 @@ export default function CustomerOrderPage() {
             {cart.length > 0 && <div className="h-20" />}
           </>
         ) : (
-          <>
-            {/* Title with back button */}
-            <div className="flex items-center gap-2 mb-3">
+          <div className="animate-fade-in">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
               <button
                 onClick={() => setStep('products')}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors shadow-sm"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-white hover:bg-gray-50 shadow-sm transition-colors text-brand-dark"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={18} />
               </button>
-              <h1 className="text-xl font-bold text-gray-800">Complete Your Order</h1>
+              <h1 className="text-2xl font-bold text-brand-dark">Complete Your Order</h1>
             </div>
 
             <form id="order-form" onSubmit={handleSubmit} className="space-y-4 pb-24">
-              {/* Cart Summary */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart size={18} className="text-gray-500" />
-                    <h2 className="font-semibold text-gray-800">Order Summary</h2>
+              {/* Order Summary */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-50 overflow-hidden">
+                <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                  <div className="flex items-center gap-2 text-brand-dark font-bold">
+                    <ShoppingCart size={18} />
+                    <span>Order Summary</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setStep('products')}
-                    className="text-sm text-[#82C3A3] hover:underline"
+                    className="text-xs text-brand-green font-bold hover:underline"
                   >
                     + Add more
                   </button>
                 </div>
-                <div className="space-y-3">
+
+                <div className="p-2">
                   {cart.map(item => (
-                    <div key={item.product.id} className="flex items-center gap-2 py-2 border-b border-gray-100 last:border-0">
-                      {/* Product Thumbnail */}
-                      <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-gradient-to-br from-[#FFF8F5] to-[#FADBD8] flex items-center justify-center overflow-hidden">
+                    <div key={item.product.id} className="flex items-start gap-2 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                      <div className="w-12 h-12 shrink-0 rounded-lg bg-gray-100 overflow-hidden">
                         {item.product.image_url ? (
                           <Image
                             src={item.product.image_url}
                             alt={item.product.name}
-                            width={40}
-                            height={40}
+                            width={48}
+                            height={48}
                             className="object-cover w-full h-full"
                           />
                         ) : (
-                          <ImageIcon size={16} className="text-gray-300" />
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ImageIcon size={18} className="text-gray-300" />
+                          </div>
                         )}
                       </div>
-                      <div className="flex-grow min-w-0">
-                        <p className="font-medium text-gray-800 text-xs leading-tight">{item.product.name}</p>
-                        <p className="text-xs text-gray-400">₱{item.product.price.toLocaleString()}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-800 text-sm leading-tight break-words">{item.product.name}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">₱{item.product.price.toLocaleString()}</p>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.product.id, -1)}
-                          className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                          className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
                         >
-                          <Minus size={12} className="text-gray-600" />
+                          <Minus size={14} />
                         </button>
-                        <span className="w-5 text-center font-semibold text-xs">{item.quantity}</span>
+                        <span className="font-bold text-brand-dark w-5 text-center text-sm">{item.quantity}</span>
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.product.id, 1)}
-                          className="w-6 h-6 flex items-center justify-center rounded-full bg-[#82C3A3] hover:bg-[#6BAF8B] transition-colors"
+                          className="w-7 h-7 rounded-full bg-brand-green hover:bg-brand-green-dark flex items-center justify-center text-white transition-colors shadow-sm"
                         >
-                          <Plus size={12} className="text-white" />
+                          <Plus size={14} />
                         </button>
                       </div>
-                      <p className="font-semibold text-gray-800 text-xs w-12 text-right">₱{(item.product.price * item.quantity).toLocaleString()}</p>
+                      <div className="text-right w-16 shrink-0 font-bold text-brand-dark text-sm pt-0.5">
+                        ₱{(item.product.price * item.quantity).toLocaleString()}
+                      </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
+
+                <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
                   <span className="font-bold text-gray-800">Total</span>
-                  <span className="text-lg font-bold text-[#82C3A3]">₱{getCartTotal().toLocaleString()}</span>
+                  <span className="font-bold text-xl text-brand-green">₱{getCartTotal().toLocaleString()}</span>
                 </div>
               </div>
 
-              {/* Customer Details */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center gap-2 mb-3">
-                  <User size={18} className="text-gray-500" />
-                  <h2 className="font-semibold text-gray-800">Your Details</h2>
+              {/* Your Details */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-50 p-4">
+                <div className="flex items-center gap-2 text-brand-dark font-bold mb-4">
+                  <User size={18} />
+                  <span>Your Details</span>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
+                    <label className="text-xs font-bold text-gray-500 mb-1 ml-1 block">Full Name <span className="text-red-400">*</span></label>
                     <input
                       type="text"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent"
+                      className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-green/50 transition-all"
                       placeholder="Juan Dela Cruz"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number <span className="text-red-500">*</span>
-                    </label>
+                    <label className="text-xs font-bold text-gray-500 mb-1 ml-1 block">Phone Number <span className="text-red-400">*</span></label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent"
+                      className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-green/50 transition-all"
                       placeholder="09171234567"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address <span className="text-red-500">*</span>
-                    </label>
+                    <label className="text-xs font-bold text-gray-500 mb-1 ml-1 block">Email Address <span className="text-red-400">*</span></label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent"
+                      className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-green/50 transition-all"
                       placeholder="juan@email.com"
                       required
                     />
@@ -457,84 +456,85 @@ export default function CustomerOrderPage() {
               </div>
 
               {/* Pickup Date */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <Calendar size={18} className="text-gray-500" />
-                  <h2 className="font-semibold text-gray-800">Pickup Date</h2>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-50 p-4">
+                <div className="flex items-center gap-2 text-brand-dark font-bold mb-1">
+                  <Calendar size={18} />
+                  <span>Pickup Date</span>
                 </div>
-                <p className="text-sm text-gray-500 mb-3">Orders require at least 2 days to prepare.</p>
+                <p className="text-xs text-gray-500 mb-3 ml-6">Orders require at least 2 days to prepare.</p>
                 <input
                   type="date"
                   value={pickupDate}
                   onChange={(e) => setPickupDate(e.target.value)}
                   min={getMinPickupDate()}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent"
+                  className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-green/50 transition-all text-gray-700 font-medium"
                   required
                 />
               </div>
 
               {/* Payment Method */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <CreditCard size={18} className="text-gray-500" />
-                  <h2 className="font-semibold text-gray-800">Payment Method</h2>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-50 p-4">
+                <div className="flex items-center gap-2 text-brand-dark font-bold mb-1">
+                  <CreditCard size={18} />
+                  <span>Payment Method</span>
                 </div>
-                <p className="text-sm text-gray-500 mb-3">Select how you will pay. QR codes will be shown after placing order.</p>
+                <p className="text-xs text-gray-500 mb-4 ml-6">QR codes will be shown after placing order.</p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('gcash')}
-                    className={`p-4 rounded-lg border-2 transition-colors ${
+                    className={`p-4 rounded-xl border-2 transition-all font-bold text-lg ${
                       paymentMethod === 'gcash'
-                        ? 'border-[#007DFE] bg-[#007DFE]/10'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-[#007DFE] bg-[#E8F3FF] text-[#007DFE]'
+                        : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'
                     }`}
                   >
-                    <p className="font-semibold text-[#007DFE]">GCash</p>
+                    GCash
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('maribank')}
-                    className={`p-4 rounded-lg border-2 transition-colors ${
+                    className={`p-4 rounded-xl border-2 transition-all font-bold text-lg ${
                       paymentMethod === 'maribank'
-                        ? 'border-[#F26522] bg-orange-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-[#F57C00] bg-[#FFF3E0] text-[#F57C00]'
+                        : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'
                     }`}
                   >
-                    <p className="font-semibold text-[#F26522]">MariBank</p>
+                    MariBank
                   </button>
                 </div>
               </div>
 
               {/* Order Notes */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText size={18} className="text-gray-500" />
-                  <h2 className="font-semibold text-gray-800">Order Notes <span className="font-normal text-gray-400">(Optional)</span></h2>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-50 p-4">
+                <div className="flex items-center gap-2 text-brand-dark font-bold mb-3">
+                  <FileText size={18} />
+                  <span>Order Notes</span>
+                  <span className="text-gray-400 font-normal text-sm">(Optional)</span>
                 </div>
                 <textarea
                   value={orderNotes}
                   onChange={(e) => setOrderNotes(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#82C3A3] focus:border-transparent resize-none"
-                  rows={3}
+                  className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-green/50 transition-all min-h-[100px] resize-none"
                   placeholder="Any special requests? (e.g., no nuts, for birthday)"
                 />
               </div>
-
             </form>
 
             {/* Sticky Submit Button */}
-            <div className="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto">
-              <button
-                type="submit"
-                form="order-form"
-                disabled={loading || cart.length === 0}
-                className="w-full py-4 bg-brand-green text-white font-bold rounded-full shadow-xl shadow-brand-green/30 hover:bg-brand-green-dark transition-all active:scale-[0.98] disabled:bg-gray-400 disabled:shadow-none disabled:cursor-not-allowed"
-              >
-                {loading ? 'Placing Order...' : `Place Order - ₱${getCartTotal().toLocaleString()}`}
-              </button>
+            <div className="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-brand-bg via-brand-bg to-transparent z-40">
+              <div className="max-w-4xl mx-auto">
+                <button
+                  type="submit"
+                  form="order-form"
+                  disabled={loading || cart.length === 0}
+                  className="w-full py-4 bg-brand-green text-white font-bold rounded-full shadow-xl shadow-brand-green/30 hover:bg-brand-green-dark transition-all active:scale-[0.99] disabled:bg-gray-400 disabled:shadow-none disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Placing Order...' : `Place Order - ₱${getCartTotal().toLocaleString()}`}
+                </button>
+              </div>
             </div>
-          </>
+          </div>
         )}
       </main>
     </div>
