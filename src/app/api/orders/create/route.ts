@@ -20,7 +20,7 @@ type OrderRequest = {
   customerName: string;
   phone: string;
   email: string;
-  paymentMethod: 'gcash' | 'maribank';
+  paymentMethod: 'gcash' | 'maribank' | 'cash';
   pickupDate: string;
   orderNotes: string;
   items: OrderItem[];
@@ -123,7 +123,8 @@ export async function POST(request: Request) {
       day: 'numeric'
     });
 
-    const paymentMethodName = paymentMethod === 'gcash' ? 'GCash' : 'MariBank';
+    const isCash = paymentMethod === 'cash';
+    const paymentMethodName = paymentMethod === 'gcash' ? 'GCash' : paymentMethod === 'maribank' ? 'MariBank' : 'Cash';
 
     // Site URL for email links
     const siteUrl = 'https://sistersandmom.site';
@@ -192,7 +193,32 @@ export async function POST(request: Request) {
           </table>
         </td></tr>
 
-        <!-- Payment QR -->
+        <!-- Payment Section -->
+        ${isCash ? `
+        <tr><td style="padding:0 16px 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#E8F5EC;border:1px solid #A9DFBF;border-radius:10px;">
+            <tr><td style="padding:14px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#82C3A3;">Cash Payment</p>
+              <p style="margin:0 0 8px;font-size:12px;color:#2D6A4F;">Pay when you pick up your order</p>
+              <p style="margin:0;font-size:20px;font-weight:bold;color:#82C3A3;">₱${totalAmount.toLocaleString()}</p>
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <!-- Next Steps for Cash -->
+        <tr><td style="padding:0 16px 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#E8F5EC;border:1px solid #A9DFBF;border-radius:10px;">
+            <tr><td style="padding:14px;">
+              <p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#2D6A4F;">What to do next</p>
+              <p style="margin:0 0 6px;font-size:13px;color:#2D6A4F;">1. Message us on Instagram to confirm</p>
+              <p style="margin:0 0 6px;font-size:13px;color:#2D6A4F;">2. Pick up on your scheduled date</p>
+              <p style="margin:0 0 12px;font-size:13px;color:#2D6A4F;">3. Pay ₱${totalAmount.toLocaleString()} in cash</p>
+              <a href="https://ig.me/m/bysistersandmom" style="display:block;background:linear-gradient(135deg,#833AB4,#E1306C,#F77737);color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-weight:600;text-align:center;font-size:13px;">Message @bysistersandmom</a>
+              <p style="margin:10px 0 0;font-size:11px;color:#2D6A4F;text-align:center;background:#d4edda;padding:6px;border-radius:6px;">We confirm within 1-2 hours (9AM-6PM)</p>
+            </td></tr>
+          </table>
+        </td></tr>
+        ` : `
         <tr><td style="padding:0 16px 16px;">
           <table width="100%" cellpadding="0" cellspacing="0" style="background:${paymentMethod === 'gcash' ? '#EBF5FF' : '#FFF8E1'};border:1px solid ${paymentMethod === 'gcash' ? '#90CAF9' : '#FFE082'};border-radius:10px;">
             <tr><td style="padding:14px;text-align:center;">
@@ -221,6 +247,7 @@ export async function POST(request: Request) {
             </td></tr>
           </table>
         </td></tr>
+        `}
 
         <!-- Track Button -->
         <tr><td style="padding:0 16px 16px;text-align:center;">

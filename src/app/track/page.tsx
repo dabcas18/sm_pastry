@@ -18,6 +18,7 @@ type Order = {
   is_paid: boolean;
   is_production_complete: boolean;
   is_completed: boolean;
+  payment_method: string;
   created_at: string;
 };
 
@@ -32,10 +33,10 @@ type OrderItem = {
 };
 
 const STATUS_STEPS = [
-  { key: 'pending', label: 'Order Placed', icon: Package, description: 'Waiting for payment confirmation' },
-  { key: 'confirmed', label: 'Payment Confirmed', icon: CheckCircle, description: 'Order is being prepared' },
-  { key: 'ready', label: 'Ready for Pickup', icon: Truck, description: 'You can now book a courier' },
-  { key: 'completed', label: 'Completed', icon: CheckCircle, description: 'Order has been picked up' },
+  { key: 'pending', label: 'Order Placed', icon: Package, description: 'Waiting for payment confirmation', descriptionCash: 'Waiting for order confirmation' },
+  { key: 'confirmed', label: 'Confirmed', icon: CheckCircle, description: 'Order is being prepared', descriptionCash: 'Order is being prepared' },
+  { key: 'ready', label: 'Ready for Pickup', icon: Truck, description: 'You can now book a courier', descriptionCash: 'You can now book a courier' },
+  { key: 'completed', label: 'Completed', icon: CheckCircle, description: 'Order has been picked up', descriptionCash: 'Order has been picked up' },
 ];
 
 function TrackOrderContent() {
@@ -323,7 +324,12 @@ function TrackOrderContent() {
 
             {/* Status Timeline */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-50 mb-4">
-              <h2 className="font-bold text-brand-dark mb-5">Status</h2>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="font-bold text-brand-dark">Status</h2>
+                {order.payment_method === 'cash' && (
+                  <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Cash Payment</span>
+                )}
+              </div>
               <div className="relative">
                 {/* Vertical Line */}
                 <div className="absolute left-[17px] top-4 bottom-4 w-0.5 bg-gray-100"></div>
@@ -335,6 +341,7 @@ function TrackOrderContent() {
                     const isCompleted = index <= currentIndex;
                     const isCurrent = index === currentIndex;
                     const Icon = step.icon;
+                    const isCash = order.payment_method === 'cash';
 
                     return (
                       <div key={step.key} className="flex gap-4">
@@ -352,7 +359,7 @@ function TrackOrderContent() {
                             {step.label}
                           </p>
                           {isCurrent && (
-                            <p className="text-sm text-gray-400 mt-0.5">{step.description}</p>
+                            <p className="text-sm text-gray-400 mt-0.5">{isCash ? step.descriptionCash : step.description}</p>
                           )}
                         </div>
                       </div>

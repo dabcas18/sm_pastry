@@ -20,6 +20,7 @@ type Order = {
   is_completed: boolean;
   is_production_complete: boolean;
   status: string;
+  payment_method: string;
   created_at: string;
 };
 

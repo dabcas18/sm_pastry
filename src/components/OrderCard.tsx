@@ -18,6 +18,7 @@ type Order = {
   is_completed: boolean;
   is_production_complete: boolean;
   status: string;
+  payment_method: string;
   formattedDate: string;
 };
 
@@ -34,10 +35,10 @@ type OrderCardProps = {
 };
 
 const STATUS_CONFIG = {
-  pending: { label: 'Pending', color: 'bg-[#FADBD8] text-[#8B5A2B]', nextStatus: 'confirmed', nextLabel: 'Confirm Payment' },
-  confirmed: { label: 'Confirmed', color: 'bg-[#FFF8F5] text-[#82C3A3] border border-[#82C3A3]', nextStatus: 'ready', nextLabel: 'Mark Ready' },
-  ready: { label: 'Ready', color: 'bg-[#82C3A3] text-white', nextStatus: 'completed', nextLabel: 'Complete Order' },
-  completed: { label: 'Completed', color: 'bg-gray-100 text-gray-500', nextStatus: null, nextLabel: null },
+  pending: { label: 'Pending', color: 'bg-[#FADBD8] text-[#8B5A2B]', nextStatus: 'confirmed', nextLabel: 'Confirm Payment', nextLabelCash: 'Confirm Order' },
+  confirmed: { label: 'Confirmed', color: 'bg-[#FFF8F5] text-[#82C3A3] border border-[#82C3A3]', nextStatus: 'ready', nextLabel: 'Mark Ready', nextLabelCash: 'Mark Ready' },
+  ready: { label: 'Ready', color: 'bg-[#82C3A3] text-white', nextStatus: 'completed', nextLabel: 'Complete Order', nextLabelCash: 'Complete Order' },
+  completed: { label: 'Completed', color: 'bg-gray-100 text-gray-500', nextStatus: null, nextLabel: null, nextLabelCash: null },
 };
 
 export default function OrderCard({ order, onUpdate }: OrderCardProps) {
@@ -49,6 +50,7 @@ export default function OrderCard({ order, onUpdate }: OrderCardProps) {
 
   const currentStatus = order.status || 'pending';
   const statusConfig = STATUS_CONFIG[currentStatus as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.pending;
+  const isCash = order.payment_method === 'cash';
 
   useEffect(() => {
     if (expanded && orderItems.length === 0) {
@@ -159,10 +161,17 @@ export default function OrderCard({ order, onUpdate }: OrderCardProps) {
 
       // Auto-update related flags
       if (newStatus === 'confirmed') {
-        updates.is_paid = true;
+        // Only mark as paid for non-cash orders (cash pays on pickup)
+        if (!isCash) {
+          updates.is_paid = true;
+        }
       } else if (newStatus === 'completed') {
         updates.is_completed = true;
         updates.is_production_complete = true;
+        // Cash orders are paid on completion
+        if (isCash) {
+          updates.is_paid = true;
+        }
       }
 
       const { error } = await supabase
@@ -284,15 +293,18 @@ export default function OrderCard({ order, onUpdate }: OrderCardProps) {
 
         <div className="mt-2 pt-2 border-t border-gray-200 flex flex-wrap gap-2 justify-between items-center">
           {/* Status Action Button */}
-          <div>
+          <div className="flex items-center gap-2">
             {statusConfig.nextStatus && (
               <button
                 onClick={() => handleStatusChange(statusConfig.nextStatus!)}
                 disabled={loading}
                 className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors text-white bg-[#82C3A3] hover:bg-[#6BAF8B] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Updating...' : statusConfig.nextLabel}
+                {loading ? 'Updating...' : (isCash ? statusConfig.nextLabelCash : statusConfig.nextLabel)}
               </button>
+            )}
+            {isCash && (
+              <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">Cash</span>
             )}
           </div>
 

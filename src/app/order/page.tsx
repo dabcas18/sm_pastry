@@ -33,7 +33,7 @@ export default function CustomerOrderPage() {
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'gcash' | 'maribank'>('gcash');
+  const [paymentMethod, setPaymentMethod] = useState<'gcash' | 'maribank' | 'cash'>('gcash');
   const [pickupDate, setPickupDate] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
 
@@ -478,12 +478,14 @@ export default function CustomerOrderPage() {
                   <CreditCard size={18} />
                   <span>Payment Method</span>
                 </div>
-                <p className="text-xs text-gray-500 mb-4 ml-6">QR codes will be shown after placing order.</p>
-                <div className="grid grid-cols-2 gap-3">
+                <p className="text-xs text-gray-500 mb-4 ml-6">
+                  {paymentMethod === 'cash' ? 'Pay when you pick up your order.' : 'QR codes will be shown after placing order.'}
+                </p>
+                <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('gcash')}
-                    className={`p-4 rounded-xl border-2 transition-all font-bold text-lg ${
+                    className={`p-3 rounded-xl border-2 transition-all font-bold text-base ${
                       paymentMethod === 'gcash'
                         ? 'border-[#007DFE] bg-[#E8F3FF] text-[#007DFE]'
                         : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'
@@ -494,13 +496,24 @@ export default function CustomerOrderPage() {
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('maribank')}
-                    className={`p-4 rounded-xl border-2 transition-all font-bold text-lg ${
+                    className={`p-3 rounded-xl border-2 transition-all font-bold text-base ${
                       paymentMethod === 'maribank'
                         ? 'border-[#F57C00] bg-[#FFF3E0] text-[#F57C00]'
                         : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'
                     }`}
                   >
                     MariBank
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('cash')}
+                    className={`p-3 rounded-xl border-2 transition-all font-bold text-base ${
+                      paymentMethod === 'cash'
+                        ? 'border-[#82C3A3] bg-[#E8F5EC] text-[#82C3A3]'
+                        : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'
+                    }`}
+                  >
+                    Cash
                   </button>
                 </div>
               </div>

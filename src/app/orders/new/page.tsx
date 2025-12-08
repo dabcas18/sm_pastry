@@ -45,7 +45,7 @@ export default function OrderFormPage() {
   };
   const [orderDate, setOrderDate] = useState(getPhilippineDate());
   const [pickupDate, setPickupDate] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'gcash' | 'maribank'>('gcash');
+  const [paymentMethod, setPaymentMethod] = useState<'gcash' | 'maribank' | 'cash'>('gcash');
   const [sendEmail, setSendEmail] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -327,7 +327,6 @@ export default function OrderFormPage() {
                     id="pickup_date"
                     value={pickupDate}
                     onChange={(e) => setPickupDate(e.target.value)}
-                    min={getMinPickupDate()}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#A9DFBF] focus:border-[#A9DFBF] text-sm"
                   />
                 </div>
@@ -355,6 +354,17 @@ export default function OrderFormPage() {
                       }`}
                     >
                       MariBank
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('cash')}
+                      className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        paymentMethod === 'cash'
+                          ? 'bg-[#82C3A3] text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      Cash
                     </button>
                   </div>
                 </div>

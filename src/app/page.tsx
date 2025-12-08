@@ -45,7 +45,7 @@ const FEATURED_ITEMS = [
     title: "Graham Balls",
     description: "Sweet and creamy no-bake treats coated in graham crumbs.",
     image: "/products/graham-balls.png",
-    price: "₱120 / 12pcs"
+    price: "₱120 / 15pcs"
   }
 ];
 

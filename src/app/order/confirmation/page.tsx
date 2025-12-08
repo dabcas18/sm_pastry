@@ -138,9 +138,10 @@ function OrderConfirmationContent() {
     );
   }
 
+  const isCash = order.payment_method === 'cash';
   const qrImage = order.payment_method === 'gcash' ? '/gcash-qr.jpg' : '/maribank-qr.jpg';
-  const paymentMethodName = order.payment_method === 'gcash' ? 'GCash' : 'MariBank';
-  const paymentColor = order.payment_method === 'gcash' ? '#007DFE' : '#F26522';
+  const paymentMethodName = order.payment_method === 'gcash' ? 'GCash' : order.payment_method === 'maribank' ? 'MariBank' : 'Cash';
+  const paymentColor = order.payment_method === 'gcash' ? '#007DFE' : order.payment_method === 'maribank' ? '#F26522' : '#82C3A3';
 
   return (
     <div className="min-h-screen bg-brand-bg">
@@ -208,64 +209,101 @@ function OrderConfirmationContent() {
         </div>
 
         {/* Payment Section */}
-        <div
-          className="rounded-2xl p-4 text-center relative overflow-hidden"
-          style={{ backgroundColor: order.payment_method === 'gcash' ? '#EBF5FF' : '#FFF8E1', borderColor: order.payment_method === 'gcash' ? '#90CAF9' : '#FFE082', borderWidth: '1px' }}
-        >
-          <h3 className="font-bold mb-3" style={{ color: paymentColor }}>Payment via {paymentMethodName}</h3>
-          <div className="bg-white p-3 rounded-xl shadow-sm inline-block mb-3">
-            <Image
-              src={qrImage}
-              alt={`${paymentMethodName} QR Code`}
-              width={180}
-              height={180}
-              className="rounded-lg"
-            />
+        {isCash ? (
+          <div className="rounded-2xl p-4 text-center bg-[#E8F5EC] border border-[#A9DFBF]">
+            <h3 className="font-bold mb-2 text-brand-green">Cash Payment</h3>
+            <p className="text-green-700 text-sm mb-3">Pay when you pick up your order</p>
+            <p className="font-bold text-2xl text-brand-green">₱{Number(order.total_amount).toLocaleString()}</p>
           </div>
-          <p className="font-bold text-xl mb-3" style={{ color: paymentColor }}>₱{Number(order.total_amount).toLocaleString()}</p>
-          <button
-            onClick={saveQRCode}
-            className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl font-semibold text-sm shadow-lg mx-auto transition-all hover:opacity-90 active:scale-95"
-            style={{ backgroundColor: paymentColor }}
+        ) : (
+          <div
+            className="rounded-2xl p-4 text-center relative overflow-hidden"
+            style={{ backgroundColor: order.payment_method === 'gcash' ? '#EBF5FF' : '#FFF8E1', borderColor: order.payment_method === 'gcash' ? '#90CAF9' : '#FFE082', borderWidth: '1px' }}
           >
-            <Download size={16} />
-            Save QR Code
-          </button>
-        </div>
+            <h3 className="font-bold mb-3" style={{ color: paymentColor }}>Payment via {paymentMethodName}</h3>
+            <div className="bg-white p-3 rounded-xl shadow-sm inline-block mb-3">
+              <Image
+                src={qrImage}
+                alt={`${paymentMethodName} QR Code`}
+                width={180}
+                height={180}
+                className="rounded-lg"
+              />
+            </div>
+            <p className="font-bold text-xl mb-3" style={{ color: paymentColor }}>₱{Number(order.total_amount).toLocaleString()}</p>
+            <button
+              onClick={saveQRCode}
+              className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl font-semibold text-sm shadow-lg mx-auto transition-all hover:opacity-90 active:scale-95"
+              style={{ backgroundColor: paymentColor }}
+            >
+              <Download size={16} />
+              Save QR Code
+            </button>
+          </div>
+        )}
 
         {/* Next Steps */}
         <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
           <h3 className="font-bold text-green-800 mb-3">Next Steps</h3>
-          <div className="space-y-3">
-            <div className="flex gap-3 items-start">
-              <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
-              <p className="text-green-800 text-sm">Pay using the QR code above</p>
-            </div>
-            <div className="flex gap-3 items-start">
-              <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</div>
-              <p className="text-green-800 text-sm">Screenshot your payment receipt</p>
-            </div>
-            <div className="flex gap-3 items-start">
-              <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</div>
-              <div className="space-y-2">
-                <p className="text-green-800 text-sm">Send screenshot + order number to Instagram</p>
-                <a
-                  href="https://ig.me/m/bysistersandmom"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-semibold shadow-md hover:opacity-90 transition-opacity"
-                >
-                  <Instagram className="w-4 h-4" />
-                  Message @bysistersandmom
-                  <ExternalLink className="w-3 h-3 opacity-70" />
-                </a>
+          {isCash ? (
+            <div className="space-y-3">
+              <div className="flex gap-3 items-start">
+                <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
+                <div className="space-y-2">
+                  <p className="text-green-800 text-sm">Message us on Instagram to confirm your order</p>
+                  <a
+                    href="https://ig.me/m/bysistersandmom"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-semibold shadow-md hover:opacity-90 transition-opacity"
+                  >
+                    <Instagram className="w-4 h-4" />
+                    Message @bysistersandmom
+                    <ExternalLink className="w-3 h-3 opacity-70" />
+                  </a>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</div>
+                <p className="text-green-800 text-sm">Pick up your order on the scheduled date</p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</div>
+                <p className="text-green-800 text-sm">Pay ₱{Number(order.total_amount).toLocaleString()} in cash upon pickup</p>
               </div>
             </div>
-            <div className="flex gap-3 items-start">
-              <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">4</div>
-              <p className="text-green-800 text-sm">Wait for our confirmation message</p>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex gap-3 items-start">
+                <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
+                <p className="text-green-800 text-sm">Pay using the QR code above</p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</div>
+                <p className="text-green-800 text-sm">Screenshot your payment receipt</p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</div>
+                <div className="space-y-2">
+                  <p className="text-green-800 text-sm">Send screenshot + order number to Instagram</p>
+                  <a
+                    href="https://ig.me/m/bysistersandmom"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-semibold shadow-md hover:opacity-90 transition-opacity"
+                  >
+                    <Instagram className="w-4 h-4" />
+                    Message @bysistersandmom
+                    <ExternalLink className="w-3 h-3 opacity-70" />
+                  </a>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">4</div>
+                <p className="text-green-800 text-sm">Wait for our confirmation message</p>
+              </div>
             </div>
-          </div>
+          )}
           <div className="mt-4 bg-green-100/50 rounded-lg p-2.5 text-green-700 text-xs font-medium text-center flex items-center justify-center gap-2">
             <Clock className="w-3.5 h-3.5" />
             We usually confirm within 1-2 hours (9 AM - 6 PM)
