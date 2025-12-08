@@ -31,9 +31,38 @@ export default function OrdersPage() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateCompletionStatus, setDateCompletionStatus] = useState<Map<string, boolean>>(new Map());
+  const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
     fetchOrders();
+
+    // Subscribe to realtime updates for orders
+    const channel = supabase
+      .channel('orders-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'Orders'
+        },
+        (payload) => {
+          console.log('Order change received:', payload.eventType, payload);
+          fetchOrders(true);
+        }
+      )
+      .subscribe((status, err) => {
+        console.log('Realtime subscription status:', status);
+        if (err) {
+          console.error('Realtime subscription error:', err);
+        }
+        setIsLive(status === 'SUBSCRIBED');
+      });
+
+    return () => {
+      console.log('Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -136,7 +165,13 @@ export default function OrdersPage() {
       <div className="min-h-full">
         {/* Sticky Header */}
         <div className="sticky top-0 z-20 bg-[#FFF8F5] pb-4 pt-6 px-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6 hidden lg:block">All Orders</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold text-gray-800 hidden lg:block">All Orders</h1>
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${isLive ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+              <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`}></span>
+              {isLive ? 'Live' : 'Connecting...'}
+            </div>
+          </div>
 
           {/* Date Selector */}
           <div className="mb-4 bg-white p-3 rounded-lg shadow-sm">
