@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { PlusCircle, Search, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -32,6 +32,12 @@ export default function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateCompletionStatus, setDateCompletionStatus] = useState<Map<string, boolean>>(new Map());
   const [isLive, setIsLive] = useState(false);
+
+  // Use ref to track selected date for use in callbacks
+  const selectedDateRef = useRef(selectedDate);
+  useEffect(() => {
+    selectedDateRef.current = selectedDate;
+  }, [selectedDate]);
 
   useEffect(() => {
     fetchOrders();
@@ -91,13 +97,18 @@ export default function OrdersPage() {
         const ordersForDate = data?.filter(o =>
           new Date(o.order_date).toISOString().split('T')[0] === date
         ) || [];
-        const allCompleted = ordersForDate.length > 0 && ordersForDate.every(o => o.is_completed);
+        // Consider order completed if is_completed=true OR status='completed'
+        const allCompleted = ordersForDate.length > 0 && ordersForDate.every(o =>
+          o.is_completed === true || o.status === 'completed'
+        );
         completionMap.set(date, allCompleted);
       });
       setDateCompletionStatus(completionMap);
 
       // Only auto-select date if not preserving current selection
-      if (!preserveSelectedDate || !selectedDate) {
+      // Use ref to get the current selectedDate value (avoids stale closure)
+      const currentSelectedDate = selectedDateRef.current;
+      if (!preserveSelectedDate || !currentSelectedDate) {
         // Auto-select earliest date with incomplete orders
         const earliestIncompleteDate = dates.find(date => !completionMap.get(date));
         if (earliestIncompleteDate) {
