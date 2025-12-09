@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingBag, TrendingUp, Package, LogOut, User, Menu as MenuIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingBag, TrendingUp, Package, LogOut, User, Menu as MenuIcon, ChevronLeft, ChevronRight, Box } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
@@ -40,6 +40,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const navItems = [
     { href: '/orders', label: 'Orders', icon: ShoppingBag },
+    { href: '/products', label: 'Products', icon: Box },
     { href: '/sales', label: 'Sales', icon: TrendingUp },
     { href: '/production', label: 'Production', icon: Package },
     { href: '/menu', label: 'Menu', icon: MenuIcon },
