@@ -19,9 +19,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Protected admin routes
+  // Protected admin routes (exclude image files)
   const protectedRoutes = ['/orders', '/sales', '/production', '/products'];
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  const isImageFile = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(pathname);
+  const isProtectedRoute = !isImageFile && protectedRoutes.some(route => pathname.startsWith(route));
 
   // Login page access control
   const canAccessAdmin = isAdminSubdomain || isDev;
