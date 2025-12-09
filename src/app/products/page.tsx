@@ -48,7 +48,23 @@ export default function ProductsPage() {
     image_url: ''
   });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to sanitize product name for filename
+  const sanitizeFileName = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric with dashes
+      .replace(/^-+|-+$/g, '')       // Remove leading/trailing dashes
+      .substring(0, 50);             // Limit length
+  };
+
+  // Helper to extract filename from Supabase URL
+  const getFileNameFromUrl = (url: string) => {
+    const parts = url.split('/');
+    return parts[parts.length - 1];
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -135,7 +151,10 @@ export default function ProductsPage() {
     if (selectedCategory === '__inactive__') {
       filtered = filtered.filter(p => !p.is_active);
     } else if (selectedCategory) {
-      filtered = filtered.filter(p => p.category === selectedCategory);
+      filtered = filtered.filter(p => p.category === selectedCategory && p.is_active);
+    } else {
+      // "All Categories" - only show active products
+      filtered = filtered.filter(p => p.is_active);
     }
 
     if (searchQuery.trim()) {
@@ -161,6 +180,7 @@ export default function ProductsPage() {
       image_url: ''
     });
     setPreviewImage(null);
+    setOriginalImageUrl(null);
     setIsModalOpen(true);
   }
 
@@ -176,6 +196,7 @@ export default function ProductsPage() {
       image_url: product.image_url || ''
     });
     setPreviewImage(product.image_url);
+    setOriginalImageUrl(product.image_url);
     setIsModalOpen(true);
   }
 
@@ -204,9 +225,10 @@ export default function ProductsPage() {
     setIsUploading(true);
 
     try {
-      // Create unique filename
+      // Create filename based on product name or timestamp
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const baseName = formData.name ? sanitizeFileName(formData.name) : `product-${Date.now()}`;
+      const fileName = `${baseName}-${Date.now()}.${fileExt}`;
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -247,6 +269,12 @@ export default function ProductsPage() {
       };
 
       if (editingProduct) {
+        // Delete old image if a new one was uploaded
+        if (originalImageUrl && formData.image_url && originalImageUrl !== formData.image_url) {
+          const oldFileName = getFileNameFromUrl(originalImageUrl);
+          await supabase.storage.from('products').remove([oldFileName]);
+        }
+
         // Update existing product
         const { error } = await supabase
           .from('Products')
@@ -372,8 +400,9 @@ export default function ProductsPage() {
                       className="object-cover"
                     />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-300">
-                      <ImageIcon size={48} />
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                      <ImageIcon size={32} />
+                      <span className="text-xs mt-1">Image coming soon</span>
                     </div>
                   )}
                   {!product.is_active && (

@@ -83,22 +83,63 @@ export default function CustomerOrderPage() {
     }
   }
 
+  // State for selected variants
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
   // Get unique categories
   const categories = [...new Set(products.map(p => p.category))];
 
-  // Get products for selected category
+  // Extract base name and variant from product name
+  const getProductBase = (name: string) => {
+    // Match patterns like (S), (L), (Small), (Large)
+    const sizeMatch = name.match(/^(.+?)\s*\((S|L|Small|Large)\)$/i);
+    // Match patterns like (6 pcs), (9 pcs), (6pcs), (9pcs)
+    const pcsMatch = name.match(/^(.+?)\s*\((\d+)\s*pcs?\)$/i);
+    // Match patterns like (Half Dozen), (1 Dozen), (Dozen)
+    const dozenMatch = name.match(/^(.+?)\s*\((Half Dozen|1 Dozen|Dozen)\)$/i);
+
+    if (sizeMatch) {
+      return { baseName: sizeMatch[1].trim(), variant: sizeMatch[2].toUpperCase() };
+    }
+    if (pcsMatch) {
+      return { baseName: pcsMatch[1].trim(), variant: `${pcsMatch[2]}pcs` };
+    }
+    if (dozenMatch) {
+      return { baseName: dozenMatch[1].trim(), variant: dozenMatch[2] };
+    }
+    return { baseName: name, variant: null };
+  };
+
+  // Group products by base name for selected category
   const filteredProducts = selectedCategory
     ? products.filter(p => p.category === selectedCategory)
     : products;
 
-  // Group products by category
-  const productsByCategory = products.reduce((acc, product) => {
-    if (!acc[product.category]) {
-      acc[product.category] = [];
+  // Group variants together
+  type ProductGroup = {
+    baseName: string;
+    products: Product[];
+    hasVariants: boolean;
+  };
+
+  const groupedProducts = filteredProducts.reduce((acc, product) => {
+    const { baseName } = getProductBase(product.name);
+    const existing = acc.find(g => g.baseName === baseName);
+    if (existing) {
+      existing.products.push(product);
+      existing.hasVariants = true;
+    } else {
+      acc.push({ baseName, products: [product], hasVariants: false });
     }
-    acc[product.category].push(product);
     return acc;
-  }, {} as Record<string, Product[]>);
+  }, [] as ProductGroup[]);
+
+  // Get selected product from a group
+  const getSelectedProduct = (group: ProductGroup) => {
+    if (!group.hasVariants) return group.products[0];
+    const selectedId = selectedVariants[group.baseName];
+    return group.products.find(p => p.id === selectedId) || group.products[0];
+  };
 
   const addToCart = (product: Product) => {
     setCart(prev => {
@@ -222,7 +263,7 @@ export default function CustomerOrderPage() {
             </div>
 
             {/* Category Pills - Sticky */}
-            <div className="sticky top-16 md:top-20 z-10 bg-brand-bg pt-2 pb-3 -mx-4 px-4">
+            <div className="sticky top-16 md:top-20 z-20 bg-brand-bg pt-2 pb-3 -mx-4 px-4">
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {categories.map(category => (
                   <button
@@ -244,31 +285,35 @@ export default function CustomerOrderPage() {
 
             {/* Product Cards - Responsive Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              {filteredProducts.map(product => {
-                const cartItem = cart.find(item => item.product.id === product.id);
+              {groupedProducts.map(group => {
+                const selectedProduct = getSelectedProduct(group);
+                const cartItem = cart.find(item => item.product.id === selectedProduct.id);
+
                 return (
                   <div
-                    key={product.id}
-                    className="bg-brand-pink rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 hover:shadow-lg transition-all duration-300"
+                    key={group.baseName}
+                    className="bg-white rounded-2xl p-2.5 sm:p-3 pt-10 sm:pt-12 flex flex-col gap-2 sm:gap-3 shadow-md hover:shadow-xl transition-all duration-300 relative overflow-visible mt-24 sm:mt-32 border border-gray-100"
                   >
-                    {/* Product Image / Placeholder - Square */}
-                    <div className="relative aspect-square bg-[#FFE4E4] rounded-xl overflow-hidden flex items-center justify-center">
-                      {product.image_url ? (
-                        <Image
-                          src={product.image_url}
-                          alt={product.name}
-                          fill
-                          className="object-cover"
-                        />
+                    {/* Product Image / Placeholder - 3D Pop-out Effect */}
+                    <div className="absolute -top-20 sm:-top-24 left-1/2 -translate-x-1/2 w-28 h-28 sm:w-36 sm:h-36 z-10">
+                      {selectedProduct.image_url ? (
+                        <div className="relative w-full h-full" style={{ filter: 'drop-shadow(8px 12px 15px rgba(0,0,0,0.25))' }}>
+                          <Image
+                            src={selectedProduct.image_url}
+                            alt={selectedProduct.name}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
                       ) : (
-                        <div className="flex flex-col items-center text-gray-300">
-                          <ImageIcon size={28} strokeWidth={1} className="opacity-40" />
-                          <span className="text-xs mt-1 opacity-50">No image</span>
+                        <div className="w-full h-full rounded-full bg-[#FFEAEA] flex flex-col items-center justify-center text-gray-400" style={{ boxShadow: '8px 12px 20px rgba(0,0,0,0.15)' }}>
+                          <ImageIcon size={28} strokeWidth={1} />
+                          <span className="text-[10px] mt-0.5">Coming soon</span>
                         </div>
                       )}
                       {/* Quantity Badge */}
                       {cartItem && (
-                        <div className="absolute top-1.5 right-1.5 bg-brand-green text-white text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-md">
+                        <div className="absolute -top-1 -right-1 bg-brand-green text-white text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-md">
                           {cartItem.quantity}
                         </div>
                       )}
@@ -276,23 +321,46 @@ export default function CustomerOrderPage() {
 
                     {/* Product Info */}
                     <div className="flex flex-col flex-1">
-                      <p className="font-semibold text-gray-800 text-xs sm:text-sm leading-tight min-h-[2rem] sm:min-h-[2.25rem]">{product.name}</p>
+                      <p className="font-semibold text-gray-800 text-xs sm:text-sm leading-tight min-h-[2rem] sm:min-h-[2.25rem]">{group.baseName}</p>
+
+                      {/* Variant Pills */}
+                      {group.hasVariants && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {group.products.map(product => {
+                            const { variant } = getProductBase(product.name);
+                            const isSelected = selectedProduct.id === product.id;
+                            return (
+                              <button
+                                key={product.id}
+                                onClick={() => setSelectedVariants(prev => ({ ...prev, [group.baseName]: product.id }))}
+                                className={`px-2 py-0.5 text-[10px] sm:text-xs rounded-full font-medium transition-all ${
+                                  isSelected
+                                    ? 'bg-[#E8A87C] text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                              >
+                                {variant}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
 
                       {/* Price and Add Button Row */}
                       <div className="flex items-center justify-between mt-auto pt-1">
-                        <span className="text-[#E8A87C] font-bold text-sm sm:text-base">₱{product.price.toLocaleString()}</span>
+                        <span className="text-[#E8A87C] font-bold text-sm sm:text-base">₱{selectedProduct.price.toLocaleString()}</span>
 
                         {cartItem ? (
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => updateQuantity(product.id, -1)}
+                              onClick={() => updateQuantity(selectedProduct.id, -1)}
                               className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-gray-100 transition-colors"
                             >
                               <Minus size={12} className="text-gray-600" />
                             </button>
                             <span className="w-5 text-center font-semibold text-gray-800 text-xs sm:text-sm">{cartItem.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(product.id, 1)}
+                              onClick={() => updateQuantity(selectedProduct.id, 1)}
                               className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full bg-brand-green text-white hover:bg-brand-green-dark transition-colors"
                             >
                               <Plus size={12} />
@@ -300,7 +368,7 @@ export default function CustomerOrderPage() {
                           </div>
                         ) : (
                           <button
-                            onClick={() => addToCart(product)}
+                            onClick={() => addToCart(selectedProduct)}
                             className="px-3 sm:px-4 py-1.5 bg-brand-green text-white text-xs sm:text-sm font-semibold rounded-full hover:bg-brand-green-dark active:scale-95 transition-all shadow-sm flex items-center gap-1"
                           >
                             <Plus size={12} />
