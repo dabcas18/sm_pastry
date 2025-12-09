@@ -6,10 +6,12 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
-  // Check if accessing from admin subdomain (not localhost - keep landing page accessible for dev)
-  const isAdminSubdomain = hostname.startsWith('admin.');
+  // Check environment - dev allows any non-production domain
+  const isAdminSubdomain = hostname.startsWith('admin.') && hostname.includes('sistersandmom.site');
+  const isProduction = hostname.includes('sistersandmom.site');
+  const isDev = !isProduction; // Any non-production domain (localhost, IP addresses, etc.)
 
-  // On admin subdomain, redirect root to login or orders
+  // On admin subdomain in production, redirect root to login or orders
   if (isAdminSubdomain && pathname === '/') {
     if (adminSession) {
       return NextResponse.redirect(new URL('/orders', request.url));
@@ -17,27 +19,26 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Protected routes that require authentication
-  const protectedRoutes = ['/orders', '/sales', '/production'];
-
-  // Check if current path is a protected route
+  // Protected admin routes
+  const protectedRoutes = ['/orders', '/sales', '/production', '/products'];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-  // Block /login access unless on admin subdomain or localhost (for dev)
-  const allowLogin = isAdminSubdomain || hostname.includes('localhost');
-  if (pathname === '/login' && !allowLogin && !adminSession) {
+  // Login page access control
+  const canAccessAdmin = isAdminSubdomain || isDev;
+
+  if (pathname === '/login' && !canAccessAdmin) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // If trying to access protected route without session, redirect to login or home
+  // Protected route access control
   if (isProtectedRoute && !adminSession) {
-    if (allowLogin) {
+    if (canAccessAdmin) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // If logged in and trying to access login page, redirect to orders
+  // Redirect logged-in users away from login page
   if (pathname === '/login' && adminSession) {
     return NextResponse.redirect(new URL('/orders', request.url));
   }
@@ -47,15 +48,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - logo.jpg (logo file)
-     * - products (product images)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|logo.jpg|menu.png|products).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|logo.jpg|menu.png|sw.js|manifest.json|icon-.*\\.png|gcash-qr.jpg|maribank-qr.jpg).*)',
   ],
 };

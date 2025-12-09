@@ -85,7 +85,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   />
                 </div>
                 <div className={`flex-1 ${isCollapsed ? 'lg:hidden' : ''}`}>
-                  <h2 className="font-script text-gray-800 text-lg">Sisters & Mom</h2>
+                  <h2 className="font-semibold text-gray-800 text-lg tracking-tight">Sisters & Mom</h2>
                   <p className="text-xs text-gray-500">Pastry Shop</p>
                 </div>
               </button>

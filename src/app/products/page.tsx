@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Plus, Search, Edit2, Trash2, X, Upload, Image as ImageIcon, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, Upload, Image as ImageIcon, ToggleLeft, ToggleRight, Settings } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import AppLayout from '@/components/AppLayout';
 import Image from 'next/image';
@@ -19,32 +19,28 @@ type Product = {
   created_at: string;
 };
 
-const CATEGORIES = [
-  'Brownies',
-  'Cakes',
-  'Cinnamon Rolls (Box of 4)',
-  'Cookies (1 Dozen)',
-  'Loaves',
-  'Mallows',
-  'Muffins (Box of 4)',
-  'Others',
-  'Sandwich'
-];
+type Category = {
+  id: string;
+  name: string;
+};
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   // Form state
   const [formData, setFormData] = useState({
     name: '',
-    category: 'Cookies (1 Dozen)',
+    category: '',
     price: '',
     unit_type: 'pack',
     pieces_per_pack: '',
@@ -56,6 +52,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   useEffect(() => {
@@ -77,10 +74,67 @@ export default function ProductsPage() {
     }
   }
 
+  async function fetchCategories() {
+    try {
+      const { data, error } = await supabase
+        .from('Categories')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  }
+
+  async function handleAddCategory() {
+    if (!newCategoryName.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('Categories')
+        .insert([{ name: newCategoryName.trim() }]);
+
+      if (error) throw error;
+      setNewCategoryName('');
+      await fetchCategories();
+    } catch (error) {
+      console.error('Error adding category:', error);
+      alert('Failed to add category. It may already exist.');
+    }
+  }
+
+  async function handleDeleteCategory(category: Category) {
+    // Check if any products use this category
+    const productsInCategory = products.filter(p => p.category === category.name);
+    if (productsInCategory.length > 0) {
+      alert(`Cannot delete "${category.name}" - ${productsInCategory.length} product(s) are using it.`);
+      return;
+    }
+
+    if (!confirm(`Delete category "${category.name}"?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('Categories')
+        .delete()
+        .eq('id', category.id);
+
+      if (error) throw error;
+      await fetchCategories();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      alert('Failed to delete category');
+    }
+  }
+
   function filterProducts() {
     let filtered = products;
 
-    if (selectedCategory) {
+    if (selectedCategory === '__inactive__') {
+      filtered = filtered.filter(p => !p.is_active);
+    } else if (selectedCategory) {
       filtered = filtered.filter(p => p.category === selectedCategory);
     }
 
@@ -99,7 +153,7 @@ export default function ProductsPage() {
     setEditingProduct(null);
     setFormData({
       name: '',
-      category: 'Cookies (1 Dozen)',
+      category: categories.length > 0 ? categories[0].name : '',
       price: '',
       unit_type: 'pack',
       pieces_per_pack: '',
@@ -285,10 +339,18 @@ export default function ProductsPage() {
               className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A9DFBF] bg-white"
             >
               <option value="">All Categories</option>
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
               ))}
+              <option value="__inactive__">Inactive Products</option>
             </select>
+            <button
+              onClick={() => setIsCategoryModalOpen(true)}
+              className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+              title="Manage Categories"
+            >
+              <Settings size={20} />
+            </button>
           </div>
         </div>
 
@@ -448,8 +510,8 @@ export default function ProductsPage() {
                     required
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A9DFBF] bg-white"
                   >
-                    {CATEGORIES.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
                     ))}
                   </select>
                 </div>
@@ -521,6 +583,62 @@ export default function ProductsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Category Management Modal */}
+        {isCategoryModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md">
+              <div className="px-6 py-4 border-b flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-800">Manage Categories</h2>
+                <button onClick={() => setIsCategoryModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {/* Add new category */}
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="New category name"
+                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A9DFBF]"
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                  />
+                  <button
+                    onClick={handleAddCategory}
+                    className="px-4 py-2 bg-[#A9DFBF] text-white rounded-lg hover:bg-[#82C3A3] transition-colors"
+                  >
+                    <Plus size={20} />
+                  </button>
+                </div>
+
+                {/* Category list */}
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {categories.map(cat => {
+                    const count = products.filter(p => p.category === cat.name).length;
+                    return (
+                      <div key={cat.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <span className="font-medium text-gray-800">{cat.name}</span>
+                          <span className="ml-2 text-sm text-gray-500">({count} products)</span>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteCategory(cat)}
+                          className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                          title={count > 0 ? 'Cannot delete - has products' : 'Delete category'}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         )}

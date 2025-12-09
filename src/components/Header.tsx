@@ -35,7 +35,7 @@ export default function Header({ rightContent }: HeaderProps) {
                 height={40}
                 className="rounded-full"
               />
-              <span className="font-script text-gray-800 text-xl md:text-2xl">Sisters & Mom</span>
+              <span className="font-semibold text-gray-800 text-xl md:text-2xl tracking-tight">Sisters & Mom</span>
             </Link>
 
             <div className="hidden md:flex items-center space-x-8 font-medium">
