@@ -24,28 +24,28 @@ const FEATURED_ITEMS = [
     title: "Red Velvet Cupcakes",
     description: "Classic Southern velvet sponge with rich cream cheese frosting.",
     image: "/products/cupcakes.png",
-    price: "₱180 / 6pcs"
+    price: "₱250 / 4pcs"
   },
   {
     id: 2,
     title: "Oatmeal Raisin Cookies",
     description: "Chewy, buttery cookies loaded with plump raisins and hearty oats.",
     image: "/products/cookies.png",
-    price: "₱150 / dozen"
+    price: "₱290 / dozen"
   },
   {
     id: 3,
     title: "Fudge Brownies",
     description: "Rich, fudgy brownies with a perfect crackly top and gooey center.",
     image: "/products/brownies.png",
-    price: "₱200 / 9pcs"
+    price: "₱425 / 9pcs"
   },
   {
     id: 4,
     title: "Graham Balls",
     description: "Sweet and creamy no-bake treats coated in graham crumbs.",
     image: "/products/graham-balls.png",
-    price: "₱120 / 15pcs"
+    price: "₱150 / 15pcs"
   }
 ];
 
